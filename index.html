@@ -1,0 +1,2834 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>活動報到系統</title>
+
+    <!-- Bootstrap -->
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <!-- =========================
+ Login Page
+========================= -->
+
+    <div class="login-wrapper" id="loginPage">
+      <!-- Left -->
+
+      <div class="login-left">
+        <div class="brand-box">
+          <div class="brand-title">臺北市立大學</div>
+
+          <div class="brand-subtitle">師資培育及職涯發展中心</div>
+
+          <div class="brand-en">
+            Center for Teacher Education<br />
+            and Career Development
+          </div>
+        </div>
+      </div>
+
+      <!-- Right -->
+
+      <div class="login-right">
+        <div class="login-panel">
+          <div class="login-system-name">活動報到管理系統</div>
+
+          <div class="login-system-subtitle">
+            Activity Check-in Management System
+          </div>
+
+          <div class="mt-4">
+            <label class="form-label"> 帳號 </label>
+
+            <input
+              type="text"
+              id="account"
+              class="form-control login-input"
+              placeholder="請輸入帳號"
+            />
+          </div>
+
+          <div class="mt-3">
+            <label class="form-label"> 密碼 </label>
+
+            <input
+              type="password"
+              id="password"
+              class="form-control login-input"
+              placeholder="請輸入密碼"
+            />
+          </div>
+
+          <button id="loginBtn" class="login-btn mt-4" onclick="login()">
+            登入系統
+          </button>
+
+          <div id="msg" class="alert alert-danger mt-3 d-none"></div>
+
+          <!-- Loading -->
+
+          <div class="loading-box" id="loadingBox">
+            <div class="spinner-border text-primary" role="status"></div>
+
+            <div class="loading-text">系統登入驗證中...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================
+ Dashboard
+========================= -->
+
+    <div id="dashboardPage" class="d-none">
+      <div class="dashboard-layout">
+        <!-- Sidebar -->
+
+        <div class="sidebar">
+          <div class="sidebar-title">控制台</div>
+
+          <div class="sidebar-user" id="welcomeText"></div>
+
+          <hr />
+
+          <!-- Admin -->
+
+          <div id="menuAdmin" class="d-none">
+            <button
+              class="menu-btn active"
+              onclick="showPage('dashboard', this)"
+            >
+              系統總覽
+            </button>
+
+            <button class="menu-btn" onclick="showPage('activities', this)">
+              活動管理
+            </button>
+
+            <button class="menu-btn" onclick="showPage('settings', this)">
+              系統設定
+            </button>
+          </div>
+
+          <!-- Checkin -->
+
+          <div id="menuCheckin" class="d-none">
+            <!-- 系統總覽 -->
+
+            <button
+              class="menu-btn active"
+              onclick="showPage('dashboard', this)"
+            >
+              系統總覽
+            </button>
+
+            <!-- 現場報到 -->
+
+            <button
+              class="menu-btn"
+              onclick="showPage('checkinActivities', this)"
+            >
+              現場報到
+            </button>
+
+            <!-- 報到紀錄 -->
+
+            <button class="menu-btn" onclick="showPage('checkinRecords', this)">
+              報到紀錄
+            </button>
+          </div>
+
+          <!-- Interview -->
+
+          <div id="menuInterview" class="d-none">
+            <button class="menu-btn active">面試叫號</button>
+          </div>
+
+          <!-- Readonly -->
+
+          <div id="menuReadonly" class="d-none">
+            <button class="menu-btn active">即時查詢</button>
+          </div>
+
+          <!-- Logout -->
+
+          <div class="logout-area">
+            <button class="btn btn-outline-light w-100" onclick="logout()">
+              登出系統
+            </button>
+          </div>
+        </div>
+
+        <!-- Main -->
+
+        <div class="main-content">
+          <div id="systemContent">
+            <!-- Dashboard -->
+
+            <div id="page-dashboard">
+              <div class="page-title">系統總覽</div>
+
+              <div class="row g-4">
+                <!-- 今日活動 -->
+
+                <div class="col-md-3">
+                  <div class="stat-card">
+                    <div class="stat-title">今日活動</div>
+
+                    <div
+                      id="todayActivityCount"
+                      class="stat-value loading-number"
+                    >
+                      <div class="number-skeleton"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 已報到 -->
+
+                <div class="col-md-3">
+                  <div class="stat-card">
+                    <div class="stat-title">已報到</div>
+
+                    <div id="checkedinCount" class="stat-value loading-number">
+                      <div class="number-skeleton"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 面試完成 -->
+
+                <div class="col-md-3">
+                  <div class="stat-card">
+                    <div class="stat-title">面試完成</div>
+
+                    <div
+                      id="interviewedCount"
+                      class="stat-value loading-number"
+                    >
+                      <div class="number-skeleton"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 缺考 -->
+
+                <div class="col-md-3">
+                  <div class="stat-card">
+                    <div class="stat-title">缺考</div>
+
+                    <div
+                      id="absentCount"
+                      class="stat-value text-danger loading-number"
+                    >
+                      <div class="number-skeleton"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Activities -->
+
+            <div id="page-activities" class="d-none">
+              <div class="activity-toolbar">
+                <div class="page-title mb-0">活動管理</div>
+
+                <button
+                  class="btn btn-primary btn-lg"
+                  onclick="openCreateActivityModal()"
+                >
+                  ＋ 新增活動
+                </button>
+              </div>
+
+              <div class="row g-4" id="activityList"></div>
+            </div>
+
+            <!-- Settings -->
+
+            <div id="page-settings" class="d-none">
+              <div class="page-title">系統設定</div>
+
+              <div class="content-card">系統設定功能開發中</div>
+            </div>
+
+            <!-- 現場報到頁 -->
+            <div id="page-checkinActivities" class="page d-none">
+              <div class="page-header">
+                <h1 class="page-title">現場報到</h1>
+              </div>
+
+              <div id="checkinActivitiesContainer">載入活動中...</div>
+            </div>
+
+            <!-- =========================
+報到紀錄頁
+========================= -->
+
+            <div id="page-checkinRecords" class="page d-none">
+              <!-- Header -->
+
+              <div class="record-header">
+                <h1 class="page-title">報到紀錄</h1>
+
+                <div class="page-subtitle">
+                  查看所有活動之現場報到與面試紀錄
+                </div>
+              </div>
+
+              <!-- 統計卡片 -->
+
+              <div class="record-summary-grid">
+                <div class="record-card">
+                  <div class="record-card-title">已報到人數</div>
+
+                  <div
+                    class="record-card-value primary"
+                    id="recordTotalCheckin"
+                  >
+                    0
+                  </div>
+                </div>
+
+                <div class="record-card">
+                  <div class="record-card-title">遲到報到</div>
+
+                  <div class="record-card-value warning" id="recordLateCount">
+                    0
+                  </div>
+                </div>
+
+                <div class="record-card">
+                  <div class="record-card-title">缺考人數</div>
+
+                  <div class="record-card-value danger" id="recordAbsentCount">
+                    0
+                  </div>
+                </div>
+              </div>
+
+              <!-- Toolbar -->
+
+              <div class="record-toolbar">
+                <!-- 搜尋 -->
+
+                <input
+                  type="text"
+                  id="recordSearch"
+                  class="record-search-input"
+                  placeholder="搜尋姓名 / 身分證字號 / 活動編號"
+                  onkeyup="filterCheckinRecords()"
+                />
+
+                <!-- 狀態 -->
+
+                <select
+                  id="recordStatusFilter"
+                  class="record-select"
+                  onchange="filterCheckinRecords()"
+                >
+                  <option value="">全部狀態</option>
+
+                  <option value="已報到">已報到</option>
+
+                  <option value="遲到報到">遲到報到</option>
+
+                  <option value="缺考">缺考</option>
+                </select>
+
+                <!-- Button -->
+
+                <button
+                  class="record-refresh-btn"
+                  onclick="loadCheckinRecords()"
+                >
+                  ↻ 重新整理
+                </button>
+              </div>
+
+              <!-- Table -->
+
+              <div class="record-table-wrapper">
+                <table class="record-table">
+                  <thead>
+                    <tr>
+                      <th>姓名</th>
+
+                      <th>身分證字號</th>
+
+                      <th>活動編號</th>
+
+                      <th>活動日期</th>
+
+                      <th>報到狀態</th>
+
+                      <th>面試狀態</th>
+
+                      <th>報到時間</th>
+
+                      <th>備註</th>
+
+                      <th>操作人員</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="checkinRecordsTable">
+                    <tr>
+                      <td colspan="9" class="empty-cell">尚無報到紀錄</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Checkin Room -->
+
+            <div id="page-checkin-room" class="d-none">
+              <!-- Header -->
+
+              <!-- Header -->
+
+              <div class="checkin-header">
+                <div>
+                  <div class="page-title">現場報到管理</div>
+
+                  <div id="checkinRoomTitle" class="checkin-subtitle">
+                    載入活動中...
+                  </div>
+                </div>
+              </div>
+
+              <!-- Toolbar -->
+
+              <div class="checkin-toolbar">
+                <!-- 搜尋框 -->
+
+                <div class="search-wrapper">
+                  <input
+                    type="text"
+                    id="checkinSearch"
+                    class="search-input"
+                    placeholder="搜尋姓名 / 身分證字號"
+                    onkeyup="filterCheckinList()"
+                  />
+                </div>
+
+                <!-- 右側按鈕 -->
+
+                <div class="toolbar-actions">
+                  <!-- 重新整理 -->
+
+                  <button
+                    class="btn-refresh-modern"
+                    onclick="reloadCurrentCheckinData()"
+                  >
+                    <span>↻</span>
+
+                    重新整理名單
+                  </button>
+
+                  <!-- 返回 -->
+
+                  <button
+                    class="btn-back-modern"
+                    onclick="
+                      showPage(
+                        'checkinActivities',
+                        document.querySelectorAll('.menu-btn')[1],
+                      )
+                    "
+                  >
+                    <span>◀</span>
+
+                    返回列表
+                  </button>
+                </div>
+              </div>
+              <p></p>
+
+              <!-- Table -->
+
+              <div class="table-card">
+                <table class="table align-middle">
+                  <thead>
+                    <tr>
+                      <th>姓名</th>
+
+                      <th>身分證字號</th>
+
+                      <th>活動編號</th>
+
+                      <th>活動地點</th>
+
+                      <th>活動日期</th>
+
+                      <th>報到開始</th>
+
+                      <th>報到截止</th>
+
+                      <th>報到狀態</th>
+
+                      <th>面試狀態</th>
+
+                      <th>目前叫號</th>
+
+                      <th>缺考</th>
+
+                      <th>報到時間</th>
+
+                      <th>備註</th>
+
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="checkinTableBody">
+                    <tr>
+                      <td colspan="14">載入中...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Pagination -->
+
+              <div id="paginationContainer" class="pagination-wrapper"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================
+ Activity Modal
+========================= -->
+
+    <div class="modal fade" id="activityModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">新增活動</h5>
+
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="row g-3">
+              <!-- 活動代碼 -->
+
+              <div class="col-md-6">
+                <label class="form-label"> 活動代碼 </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  id="activityCode"
+                  placeholder="例如：2026_SpecialEduExam"
+                />
+              </div>
+
+              <!-- 活動名稱 -->
+
+              <div class="col-md-6">
+                <label class="form-label"> 活動名稱 </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  id="activityName"
+                  placeholder="請輸入活動名稱"
+                />
+              </div>
+
+              <!-- 活動類型 -->
+
+              <div class="col-md-6">
+                <label class="form-label"> 活動類型 </label>
+
+                <select class="form-select" id="activityType">
+                  <option value="招生考試">招生考試</option>
+
+                  <option value="工作坊">工作坊</option>
+
+                  <option value="研習活動">研習活動</option>
+                </select>
+              </div>
+
+              <!-- 活動日期 -->
+
+              <div class="col-md-6">
+                <label class="form-label"> 活動日期 </label>
+
+                <input type="date" class="form-control" id="activityDate" />
+              </div>
+
+              <!-- 活動地點 -->
+
+              <div class="col-md-12">
+                <label class="form-label"> 活動地點 </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  id="activityLocation"
+                  placeholder="請輸入活動地點"
+                />
+              </div>
+
+              <!-- 活動開始時間 -->
+
+              <div class="col-md-6">
+                <label class="form-label"> 活動開始時間 </label>
+
+                <input
+                  type="time"
+                  class="form-control"
+                  id="activityStartTime"
+                />
+              </div>
+
+              <!-- 活動結束時間 -->
+
+              <div class="col-md-6">
+                <label class="form-label"> 活動結束時間 </label>
+
+                <input type="time" class="form-control" id="activityEndTime" />
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              取消
+            </button>
+
+            <button
+              id="createActivityBtn"
+              class="btn btn-primary"
+              onclick="createActivity()"
+            >
+              建立活動
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Edit Activity Modal -->
+
+    <div class="modal fade" id="editActivityModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">編輯活動</h5>
+
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <input type="hidden" id="editUUID" />
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label"> 活動代碼 </label>
+
+                <input type="text" class="form-control" id="editCode" />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label"> 活動名稱 </label>
+
+                <input type="text" class="form-control" id="editName" />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label"> 活動類型 </label>
+
+                <select class="form-select" id="editType">
+                  <option>招生考試</option>
+
+                  <option>工作坊</option>
+
+                  <option>研習活動</option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label"> 活動日期 </label>
+
+                <input type="date" class="form-control" id="editDate" />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label"> 開始時間 </label>
+
+                <input type="time" class="form-control" id="editStartTime" />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label"> 結束時間 </label>
+
+                <input type="time" class="form-control" id="editEndTime" />
+              </div>
+
+              <div class="col-12">
+                <label class="form-label"> 活動地點 </label>
+
+                <input type="text" class="form-control" id="editLocation" />
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              取消
+            </button>
+
+            <button class="btn btn-primary" onclick="updateActivity()">
+              儲存修改
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================
+    Footer
+  ========================= -->
+
+    <div class="system-footer">
+      <div class="footer-inner">
+        <div class="footer-title">
+          臺北市立大學｜師資培育及職涯發展中心 Activity Check-in Management
+          System
+
+          <br />
+
+          <span class="footer-copy">
+            © 2026 University of Taipei CTE All rights reserved. by 賴盈安
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      let dashboardLoaded = false;
+
+      let activitiesCache = [];
+
+      let filteredCheckinMembers = [];
+
+      /* =========================
+Pagination
+========================= */
+
+      let currentCheckinPage = 1;
+
+      const CHECKIN_PAGE_SIZE = 10;
+
+      let currentCheckinMembers = [];
+
+      let currentActivityCode = "";
+
+      /* =========================
+API URL
+========================= */
+
+      const API_URL =
+        "https://script.google.com/macros/s/AKfycbzmmbDqXcoqz1C5f9IbRa-aAzswCmwMCz-0pqouRRijSTssXNu95D7mb3g5p8sgyT3J/exec";
+
+      /* =========================
+Login
+========================= */
+
+      async function login() {
+        const account = document.getElementById("account").value.trim();
+
+        const password = document.getElementById("password").value.trim();
+
+        const msg = document.getElementById("msg");
+
+        const loadingBox = document.getElementById("loadingBox");
+
+        const loginBtn = document.getElementById("loginBtn");
+
+        msg.classList.add("d-none");
+
+        if (!account || !password) {
+          showError("請輸入帳號與密碼");
+          return;
+        }
+
+        loadingBox.style.display = "block";
+
+        loginBtn.disabled = true;
+        loginBtn.style.opacity = ".7";
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+
+            body: JSON.stringify({
+              action: "login",
+              account: account,
+              password: password,
+            }),
+          });
+
+          const res = await response.json();
+
+          loadingBox.style.display = "none";
+
+          loginBtn.disabled = false;
+          loginBtn.style.opacity = "1";
+
+          if (res.success) {
+            localStorage.setItem(
+              "currentUser",
+
+              JSON.stringify(res.user),
+            );
+
+            setTimeout(() => {
+              showDashboard(res.user);
+            }, 500);
+          } else {
+            showError(res.message);
+          }
+        } catch (err) {
+          loadingBox.style.display = "none";
+
+          loginBtn.disabled = false;
+          loginBtn.style.opacity = "1";
+
+          showError("系統連線失敗");
+
+          console.error(err);
+        }
+      }
+
+      /* =========================
+Error
+========================= */
+
+      function showError(text) {
+        const msg = document.getElementById("msg");
+
+        msg.classList.remove("d-none");
+
+        msg.innerText = text;
+      }
+
+      /* =========================
+Dashboard
+========================= */
+
+      async function loadDashboard() {
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+
+            body: JSON.stringify({
+              action: "getActivities",
+            }),
+          });
+
+          const result = await response.json();
+
+          const activities = result.data || [];
+
+          // 台灣日期
+
+          const today = new Date();
+
+          const year = today.getFullYear();
+
+          const month = String(today.getMonth() + 1).padStart(2, "0");
+
+          const day = String(today.getDate()).padStart(2, "0");
+
+          const todayStr = `${year}/${month}/${day}`;
+
+          // 今日活動
+
+          const todayActivities = activities.filter(
+            (activity) => formatDate(activity.date) === todayStr,
+          );
+
+          // 寫入數據
+          const todayEl = document.getElementById("todayActivityCount");
+
+          todayEl.innerHTML = todayActivities.length;
+
+          document.getElementById("checkedinCount").innerHTML = 0;
+
+          document.getElementById("interviewedCount").innerHTML = 0;
+
+          document.getElementById("absentCount").innerHTML = 0;
+
+          // 已載入
+          dashboardLoaded = true;
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function showDashboard(user) {
+        window.currentUser = user;
+
+        document.getElementById("loginPage").classList.add("d-none");
+
+        document.getElementById("dashboardPage").classList.remove("d-none");
+
+        document.getElementById("welcomeText").innerHTML = `
+      歡迎：<br>
+      ${user.name}<br>
+      (${user.role})
+  `;
+
+        switch (user.role) {
+          case "admin":
+            document.getElementById("menuAdmin").classList.remove("d-none");
+
+            break;
+
+          case "checkin":
+            document.getElementById("menuCheckin").classList.remove("d-none");
+
+            break;
+
+          case "interview":
+            document.getElementById("menuInterview").classList.remove("d-none");
+
+            break;
+
+          case "readonly":
+            document.getElementById("menuReadonly").classList.remove("d-none");
+
+            break;
+        }
+
+        // 預設頁面
+
+        const firstMenu = document.querySelector(".menu-btn.active");
+
+        showPage("dashboard", firstMenu);
+      }
+      /* =========================
+Logout
+========================= */
+
+      function logout() {
+        document.getElementById("dashboardPage").classList.add("d-none");
+
+        document.getElementById("loginPage").classList.remove("d-none");
+
+        document.getElementById("account").value = "";
+
+        document.getElementById("password").value = "";
+
+        document.getElementById("msg").classList.add("d-none");
+
+        document.getElementById("menuAdmin").classList.add("d-none");
+
+        document.getElementById("menuCheckin").classList.add("d-none");
+
+        document.getElementById("menuInterview").classList.add("d-none");
+
+        document.getElementById("menuReadonly").classList.add("d-none");
+
+        localStorage.removeItem("currentUser");
+
+        dashboardLoaded = false;
+
+        location.reload();
+      }
+
+      /* =========================
+Load Activities
+========================= */
+
+      document.getElementById("activityList").innerHTML = `
+
+  <div class="loading-wrapper">
+
+    <div class="loading-spinner"></div>
+
+    <div class="loading-text">
+
+      載入活動中...
+
+    </div>
+
+  </div>
+
+`;
+
+      async function loadActivities() {
+        const container = document.getElementById("activityList");
+
+        // Loading
+
+        container.innerHTML = `
+
+    <div class="loading-wrapper">
+
+      <div class="loading-spinner"></div>
+
+      <div class="loading-text">
+
+        載入活動中...
+
+      </div>
+
+    </div>
+
+  `;
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+
+            body: JSON.stringify({
+              action: "getActivities",
+            }),
+          });
+
+          const text = await response.text();
+
+          console.log(text);
+
+          const res = JSON.parse(text);
+
+          if (res.success) {
+            activitiesCache = res.data;
+
+            renderActivities(activitiesCache);
+          } else {
+            container.innerHTML = `
+
+        <div class="alert alert-danger">
+
+          活動載入失敗
+
+        </div>
+
+      `;
+          }
+        } catch (err) {
+          console.error(err);
+
+          container.innerHTML = `
+
+      <div class="alert alert-danger">
+
+        系統連線失敗
+
+      </div>
+
+    `;
+        }
+      }
+
+      async function createActivity() {
+        console.log("createActivity");
+
+        // 取得欄位
+
+        const code = document.getElementById("activityCode")?.value ?? "";
+
+        const name = document.getElementById("activityName")?.value ?? "";
+
+        const type = document.getElementById("activityType")?.value ?? "";
+
+        const date = document.getElementById("activityDate")?.value ?? "";
+
+        const startTime =
+          document.getElementById("activityStartTime")?.value ?? "";
+
+        const endTime = document.getElementById("activityEndTime")?.value ?? "";
+
+        const location =
+          document.getElementById("activityLocation")?.value ?? "";
+
+        const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+        // Debug
+
+        console.log({
+          code,
+          name,
+          type,
+          date,
+          startTime,
+          endTime,
+          location,
+        });
+
+        // 必填驗證
+
+        if (code.trim() === "" || name.trim() === "" || date.trim() === "") {
+          alert("請填寫必要欄位");
+          return;
+        }
+
+        try {
+          // Loading
+
+          const createBtn = document.getElementById("createActivityBtn");
+
+          createBtn.disabled = true;
+
+          createBtn.innerHTML = "建立中...";
+
+          // API
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+
+            body: JSON.stringify({
+              action: "createActivity",
+
+              code: code,
+
+              name: name,
+
+              type: type,
+
+              date: date,
+
+              startTime: startTime,
+
+              endTime: endTime,
+
+              location: location,
+
+              creator: currentUser.name,
+            }),
+          });
+
+          const text = await response.text();
+
+          console.log(text);
+
+          const res = JSON.parse(text);
+
+          // 還原按鈕
+
+          createBtn.disabled = false;
+
+          createBtn.innerHTML = "建立活動";
+
+          if (res.success) {
+            // 關閉 Modal
+
+            bootstrap.Modal.getInstance(
+              document.getElementById("activityModal"),
+            ).hide();
+
+            // 清空表單
+
+            document.getElementById("activityCode").value = "";
+
+            document.getElementById("activityName").value = "";
+
+            document.getElementById("activityLocation").value = "";
+
+            // 重新讀活動
+
+            activitiesCache = [];
+
+            loadActivities();
+
+            alert("活動建立成功");
+          } else {
+            alert(res.message);
+          }
+        } catch (err) {
+          console.error(err);
+
+          alert("建立失敗");
+        }
+      }
+
+      /* =========================
+Update Activity
+========================= */
+
+      async function updateActivity() {
+        const saveBtn = event.target;
+
+        saveBtn.disabled = true;
+
+        saveBtn.innerText = "儲存中...";
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            body: JSON.stringify({
+              action: "updateActivity",
+
+              uuid: document.getElementById("editUUID").value,
+
+              code: document.getElementById("editCode").value,
+
+              name: document.getElementById("editName").value,
+
+              type: document.getElementById("editType").value,
+
+              date: document.getElementById("editDate").value,
+
+              startTime: document.getElementById("editStartTime").value,
+
+              endTime: document.getElementById("editEndTime").value,
+
+              location: document.getElementById("editLocation").value,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            alert("活動更新成功");
+
+            bootstrap.Modal.getInstance(
+              document.getElementById("editActivityModal"),
+            ).hide();
+
+            // 重新載入活動
+
+            loadActivities();
+          } else {
+            alert(result.message);
+          }
+        } catch (err) {
+          console.error(err);
+
+          alert("更新失敗");
+        }
+
+        saveBtn.disabled = false;
+
+        saveBtn.innerText = "儲存修改";
+      }
+
+      /* =========================
+Toast
+========================= */
+
+      function showToast(message, type = "success") {
+        const oldToast = document.querySelector(".custom-toast");
+
+        if (oldToast) {
+          oldToast.remove();
+        }
+
+        const toast = document.createElement("div");
+
+        toast.className = `custom-toast ${type}`;
+
+        toast.innerText = message;
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+          toast.classList.add("show");
+        }, 10);
+
+        setTimeout(() => {
+          toast.classList.remove("show");
+
+          setTimeout(() => {
+            toast.remove();
+          }, 300);
+        }, 2500);
+      }
+
+      /* =========================
+日期格式化
+========================= */
+
+      function formatDate(dateStr) {
+        if (!dateStr) return "";
+
+        // 已經是 yyyy/MM/dd
+
+        if (typeof dateStr === "string") {
+          // ISO 日期
+
+          if (dateStr.includes("T")) {
+            return dateStr.split("T")[0].replaceAll("-", "/");
+          }
+
+          // yyyy-MM-dd
+
+          if (dateStr.includes("-")) {
+            return dateStr.replaceAll("-", "/");
+          }
+
+          return dateStr;
+        }
+
+        // Date 物件
+
+        const year = dateStr.getFullYear();
+
+        const month = String(dateStr.getMonth() + 1).padStart(2, "0");
+
+        const day = String(dateStr.getDate()).padStart(2, "0");
+
+        return `${year}/${month}/${day}`;
+      }
+
+      /* =========================
+時間格式化
+========================= */
+
+      function formatTime(timeStr) {
+        if (!timeStr) return "-";
+
+        if (typeof timeStr === "string") {
+          // ISO 格式
+
+          if (timeStr.includes("T")) {
+            const date = new Date(timeStr);
+
+            return date.toLocaleTimeString("zh-TW", {
+              hour: "numeric",
+              minute: "2-digit",
+
+              hour12: true,
+            });
+          }
+
+          return timeStr;
+        }
+
+        return timeStr;
+      }
+
+      /* =========================
+Render Activities
+========================= */
+
+      function renderActivities(activities) {
+        const container = document.getElementById("activityList");
+
+        let html = "";
+
+        activities.forEach((activity) => {
+          html += `
+
+      <div class="col-lg-6">
+
+        <div class="activity-card">
+
+          <div class="activity-title">
+
+            ${activity.name}
+
+          </div>
+
+          <div class="activity-meta">
+
+            活動代碼：
+            ${activity.code}
+            <br>
+
+            活動類型：
+            ${activity.type}
+            <br>
+
+            活動日期：
+            ${formatDate(activity.date)}
+            <br>
+
+            活動開始時間：
+            ${formatTime(activity.startTime)}
+            <br>
+
+            活動結束時間：
+            ${formatTime(activity.endTime)}
+            <br>
+            
+
+            活動地點：
+            ${activity.location}
+
+          </div>
+
+          <div
+            class="activity-status status-draft"
+          >
+
+            ${activity.status}
+
+          </div>
+
+          <div class="activity-actions">
+
+  <!-- 管理活動 -->
+
+  <button
+    class="btn btn-primary"
+    onclick='openEditModal(${JSON.stringify(activity)})'
+  >
+    管理活動
+  </button>
+
+  <!-- 報到開關 -->
+
+  <div
+    class="
+      form-check
+      form-switch
+      d-flex
+      align-items-center
+      ms-2
+    ">
+
+    <input
+      class="form-check-input"
+      type="checkbox"
+
+      ${activity.checkinOpen ? "checked" : ""}
+
+      onchange="
+        toggleCheckin(
+          '${activity.uuid}',
+          this.checked
+        )
+      ">
+
+    <label
+      class="
+        form-check-label
+        ms-2
+      ">
+
+      開放報到
+
+    </label>
+
+  </div>
+
+</div>
+
+        </div>
+
+      </div>
+
+    `;
+        });
+
+        container.innerHTML = html;
+      }
+      /* =========================
+Modal
+========================= */
+
+      function openCreateActivityModal() {
+        const modal = new bootstrap.Modal(
+          document.getElementById("activityModal"),
+        );
+
+        modal.show();
+      }
+
+      /* =========================
+Page Switch
+========================= */
+
+      function showPage(pageName, btn) {
+        // 隱藏全部頁面
+
+        document.querySelectorAll("#systemContent > div").forEach((page) => {
+          page.classList.add("d-none");
+        });
+
+        // 顯示目標頁
+
+        document.getElementById(`page-${pageName}`).classList.remove("d-none");
+
+        // Sidebar Active
+
+        document.querySelectorAll(".menu-btn").forEach((b) => {
+          b.classList.remove("active");
+        });
+
+        btn.classList.add("active");
+
+        /* =========================
+    特殊頁面
+    ========================= */
+        // Dashboard
+
+        if (pageName === "dashboard") {
+          if (!dashboardLoaded) {
+            loadDashboard();
+          }
+        }
+        // admin 活動管理
+
+        if (pageName === "activities") {
+          if (activitiesCache.length === 0) {
+            loadActivities();
+          } else {
+            renderActivities(activitiesCache);
+          }
+        }
+
+        // checkin 活動列表
+
+        if (pageName === "checkinActivities") {
+          loadCheckinActivities();
+        }
+
+        // 報到紀錄
+
+        if (pageName === "checkinRecords") {
+          loadCheckinRecords();
+        }
+      }
+
+      /* =========================
+Checkin Records
+========================= */
+
+      function loadCheckinRecords() {
+        console.log("報到紀錄載入中");
+      }
+
+      /* =========================
+Open Edit Modal
+========================= */
+      function convertTimeFormat(timeStr) {
+        if (!timeStr) return "";
+
+        let hour = parseInt(timeStr.match(/\d+/)[0]);
+
+        const minute = timeStr.split(":")[1];
+
+        if (timeStr.includes("下午") && hour < 12) {
+          hour += 12;
+        }
+
+        if (timeStr.includes("上午") && hour === 12) {
+          hour = 0;
+        }
+
+        return `${String(hour).padStart(2, "0")}:${minute}`;
+      }
+
+      function openEditModal(activity) {
+        document.getElementById("editUUID").value = activity.uuid;
+
+        document.getElementById("editCode").value = activity.code;
+
+        document.getElementById("editName").value = activity.name;
+
+        document.getElementById("editType").value = activity.type;
+
+        document.getElementById("editDate").value = activity.date.replaceAll(
+          "/",
+          "-",
+        );
+
+        document.getElementById("editStartTime").value = convertTimeFormat(
+          activity.startTime,
+        );
+
+        document.getElementById("editEndTime").value = convertTimeFormat(
+          activity.endTime,
+        );
+
+        document.getElementById("editLocation").value = activity.location;
+
+        new bootstrap.Modal(
+          document.getElementById("editActivityModal"),
+        ).show();
+      }
+
+      /* =========================
+Toggle Checkin
+========================= */
+
+      async function toggleCheckin(uuid, isOpen) {
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+
+            body: JSON.stringify({
+              action: "toggleCheckin",
+
+              uuid: uuid,
+
+              checkinOpen: isOpen,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            console.log("報到狀態更新成功");
+          } else {
+            alert(result.message);
+          }
+        } catch (err) {
+          console.error(err);
+
+          alert("更新失敗");
+        }
+      }
+
+      /* =========================
+load Checkin
+========================= */
+
+      async function loadCheckinActivities() {
+        const container = document.getElementById("checkinActivitiesContainer");
+
+        container.innerHTML = `
+
+  <div class="loading-wrapper">
+
+    <div class="loading-spinner"></div>
+
+    <div class="loading-text">
+
+      載入活動中...
+
+    </div>
+
+  </div>
+
+`;
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+
+            body: JSON.stringify({
+              action: "getActivities",
+            }),
+          });
+
+          const result = await response.json();
+
+          // 只抓開放報到
+
+          const openActivities = result.data.filter(
+            (activity) => activity.checkinOpen === true,
+          );
+
+          // cache
+
+          activitiesCache = result.data;
+
+          // 無活動
+
+          if (openActivities.length === 0) {
+            container.innerHTML = `
+
+                <div class="empty-state">
+
+                    目前尚無開放報到活動
+
+                </div>
+
+            `;
+
+            return;
+          }
+
+          // render
+
+          container.innerHTML = openActivities
+            .map(
+              (activity) => `
+
+<div class="checkin-card">
+
+    <!-- Header -->
+
+    <div class="checkin-card-header">
+
+        <div>
+
+            <div class="checkin-title">
+
+                ${activity.name}
+
+            </div>
+
+            <div class="checkin-date">
+
+                活動日期：${activity.date}
+
+            </div>
+
+        </div>
+
+        <div class="checkin-badge">
+
+            開放中
+
+        </div>
+
+    </div>
+
+    <!-- Content -->
+
+    <div class="checkin-info">
+
+        <div class="checkin-info-item">
+
+            <span class="info-label">
+
+                活動地點
+
+            </span>
+
+            <span class="info-value">
+
+                ${activity.location}
+
+            </span>
+
+        </div>
+
+        <div class="checkin-info-item">
+
+            <span class="info-label">
+
+                活動日期與時間
+
+            </span>
+
+            <span class="info-value">
+
+                ${formatDate(activity.date)}
+｜
+${formatTime(activity.startTime)}
+-
+${formatTime(activity.endTime)}
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+
+    <div class="checkin-card-footer">
+
+        <button
+            class="
+              btn
+              btn-primary
+              checkin-enter-btn
+            "
+
+            onclick="
+              enterCheckin(
+                '${activity.uuid}'
+              )
+            ">
+
+            進入報到
+
+        </button>
+
+    </div>
+
+</div>
+
+`,
+            )
+            .join("");
+        } catch (err) {
+          console.error(err);
+
+          container.innerHTML = "載入失敗";
+        }
+      }
+
+      /* =========================
+Enter Checkin
+========================= */
+
+      async function enterCheckin(activityUUID) {
+        // 切換頁面
+
+        document.querySelectorAll("#systemContent > div").forEach((page) => {
+          page.classList.add("d-none");
+        });
+
+        document.getElementById("page-checkin-room").classList.remove("d-none");
+
+        // title loading
+
+        document.getElementById("checkinRoomTitle").innerHTML =
+          "載入活動資料中...";
+
+        // table loading
+
+        renderCheckinLoading();
+
+        try {
+          // 找活動
+
+          const activity = activitiesCache.find(
+            (item) => item.uuid === activityUUID,
+          );
+
+          currentActivityCode = activity.code;
+
+          // 無活動
+
+          if (!activity) {
+            alert("找不到活動");
+
+            return;
+          }
+
+          // title
+
+          document.getElementById("checkinRoomTitle").innerHTML = `
+
+            活動名稱：${activity.name}
+
+            ｜
+
+            活動日期：${activity.date}
+
+        `;
+
+          // 讀取考生資料
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+
+            body: JSON.stringify({
+              action: "getCheckinMembers",
+
+              activityCode: activity.code,
+            }),
+          });
+
+          const result = await response.json();
+
+          // members
+
+          const members = result.data || [];
+
+          // cache
+
+          currentCheckinMembers = members;
+
+          // 搜尋 cache
+          filteredCheckinMembers = members;
+
+          currentCheckinPage = 1;
+
+          // 無資料
+
+          if (members.length === 0) {
+            document.getElementById("checkinTableBody").innerHTML = `
+
+                <tr>
+
+                    <td colspan="15">
+
+                        尚無報到資料
+
+                    </td>
+
+                </tr>
+
+            `;
+
+            return;
+          }
+
+          // render
+
+          renderCheckinTable();
+        } catch (err) {
+          console.error(err);
+
+          alert("載入失敗");
+        }
+      }
+
+      /* =========================
+Reload Current Checkin Data
+========================= */
+
+      async function reloadCurrentCheckinData() {
+        const btn = document.querySelector(".btn-refresh-modern");
+
+        try {
+          btn.disabled = true;
+
+          btn.innerHTML = "⏳ 更新中...";
+
+          showToast("正在同步最新名單...", "success");
+
+          renderCheckinLoading();
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+
+            body: JSON.stringify({
+              action: "getCheckinMembers",
+
+              activityCode: currentActivityCode,
+            }),
+          });
+
+          const result = await response.json();
+
+          currentCheckinMembers = result.data || [];
+
+          filteredCheckinMembers = currentCheckinMembers;
+
+          currentCheckinPage = 1;
+
+          renderCheckinTable();
+
+          showToast("名單已更新", "success");
+        } catch (err) {
+          console.error(err);
+
+          showToast("更新失敗", "error");
+        } finally {
+          btn.disabled = false;
+
+          btn.innerHTML = "<span>↻</span> 重新整理名單";
+        }
+      }
+
+      /* =========================
+Render Checkin Table
+========================= */
+
+      function renderCheckinTable() {
+        const tbody = document.getElementById("checkinTableBody");
+
+        // 分頁
+
+        const start = (currentCheckinPage - 1) * CHECKIN_PAGE_SIZE;
+
+        const end = start + CHECKIN_PAGE_SIZE;
+
+        const pageMembers = filteredCheckinMembers.slice(start, end);
+
+        // render
+
+        tbody.innerHTML = pageMembers
+          .map(
+            (member) => `
+
+        <tr>
+
+            <td>
+                ${member.name}
+            </td>
+
+            <td>
+                ${member.idNumber}
+            </td>
+
+            <td>
+                ${member.activityNumber}
+            </td>
+
+            <td>
+                ${member.location}
+            </td>
+
+            <td>
+                ${formatDate(member.date)}
+            </td>
+
+            <td>
+                ${formatTime(member.checkinStartTime)}
+            </td>
+
+            <td>
+                ${formatTime(member.checkinEndTime)}
+            </td>
+            <td>
+
+    <span class="
+        status-badge
+        ${getCheckinStatusClass(member.checkinStatus)}
+    ">
+
+        ${member.checkinStatus}
+
+    </span>
+
+</td>
+
+<td>
+
+    <span class="
+        status-badge
+        ${getInterviewStatusClass(member.interviewStatus)}
+    ">
+
+        ${member.interviewStatus}
+
+    </span>
+
+</td>
+
+
+
+            <td>
+                ${member.currentCalling ? "叫號中" : "-"}
+            </td>
+
+            <td>
+    ${
+      member.absent
+        ? `
+            <span class="
+                status-badge
+                status-danger-light
+            ">
+                缺考
+            </span>
+            `
+        : "-"
+    }
+</td>
+
+<td>
+    ${member.checkinTime ? formatDateTime(member.checkinTime) : "-"}
+</td>
+
+<td>
+    ${
+      member.note
+        ? `
+            <span class="
+                status-badge
+                status-warning
+            ">
+                ${member.note}
+            </span>
+            `
+        : "-"
+    }
+</td>
+
+            <td>
+
+    ${
+      member.checkinStatus === "已報到"
+        ? `
+
+        <button
+
+          class="
+            btn
+            btn-danger
+            btn-sm
+          "
+
+          onclick="
+            cancelCheckin(
+              '${member.uuid}'
+            )
+          ">
+
+          取消報到
+
+        </button>
+
+        `
+        : `
+
+        <button
+
+          class="
+            btn
+            btn-success
+            btn-sm
+          "
+
+          onclick="
+            checkinMember(
+              '${member.uuid}'
+            )
+          ">
+
+          報到
+
+        </button>
+
+        `
+    }
+
+</td>
+
+        </tr>
+
+    `,
+          )
+          .join("");
+
+        renderPagination();
+      }
+
+      /* =========================
+Pagination
+========================= */
+
+      function renderPagination() {
+        const container = document.getElementById("paginationContainer");
+
+        const totalPages = Math.ceil(
+          filteredCheckinMembers.length / CHECKIN_PAGE_SIZE,
+        );
+
+        let html = "";
+
+        // Previous
+
+        html += `
+
+        <button
+          class="page-btn"
+
+          onclick="
+            changePage(
+              ${currentCheckinPage - 1}
+            )
+          "
+
+          ${currentCheckinPage === 1 ? "disabled" : ""}>
+
+          上一頁
+
+        </button>
+
+    `;
+
+        // Pages
+
+        for (let i = 1; i <= totalPages; i++) {
+          html += `
+
+            <button
+
+              class="
+                page-btn
+
+                ${i === currentCheckinPage ? "active" : ""}
+              "
+
+              onclick="
+                changePage(${i})
+              ">
+
+              ${i}
+
+            </button>
+
+        `;
+        }
+
+        // Next
+
+        html += `
+
+        <button
+          class="page-btn"
+
+          onclick="
+            changePage(
+              ${currentCheckinPage + 1}
+            )
+          "
+
+          ${currentCheckinPage === totalPages ? "disabled" : ""}>
+
+          下一頁
+
+        </button>
+
+    `;
+
+        container.innerHTML = html;
+      }
+
+      /* =========================
+Change Page
+========================= */
+
+      function changePage(page) {
+        const totalPages = Math.ceil(
+          filteredCheckinMembers.length / CHECKIN_PAGE_SIZE,
+        );
+
+        if (page < 1) return;
+
+        if (page > totalPages) return;
+
+        currentCheckinPage = page;
+
+        renderCheckinTable();
+      }
+
+      /* =========================
+Checkin Member
+========================= */
+
+      async function checkinMember(uuid) {
+        // 確認
+
+        const confirmCheckin = confirm("確認完成報到？");
+
+        if (!confirmCheckin) return;
+
+        try {
+          const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+          /* =========================
+           Loading
+        ========================= */
+
+          const btn = event.target;
+
+          btn.disabled = true;
+
+          btn.innerHTML = "處理中...";
+
+          /* =========================
+           API
+        ========================= */
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+
+            body: JSON.stringify({
+              action: "checkinMember",
+
+              uuid: uuid,
+
+              operator: currentUser.name,
+            }),
+          });
+
+          const result = await response.json();
+
+          /* =========================
+           Success
+        ========================= */
+
+          if (result.success) {
+            const member = currentCheckinMembers.find(
+              (item) => item.uuid === uuid,
+            );
+
+            if (member) {
+              member.checkinStatus = "已報到";
+
+              member.checkinTime = result.checkinTime;
+
+              // 判斷遲到
+
+              const now = new Date();
+
+              const endTime = parseFrontDateTime(
+                member.date,
+
+                member.checkinEndTime,
+              );
+
+              if (now > endTime) {
+                member.note = "遲到報到";
+              } else {
+                member.note = "";
+              }
+
+              // 清除缺考
+
+              member.absent = "";
+            }
+
+            /* =========================
+               即時更新畫面
+            ========================= */
+
+            renderCheckinTable();
+
+            /* =========================
+               Toast
+            ========================= */
+
+            showToast(
+              `報到成功
+                (${member.name})`,
+
+              "success",
+            );
+          } else {
+            /* =========================
+           Fail
+        ========================= */
+            showToast(
+              result.message || "報到失敗",
+
+              "error",
+            );
+          }
+        } catch (err) {
+          console.error(err);
+
+          showToast("系統連線失敗", "error");
+        }
+      }
+
+      /* =========================
+Cancel Checkin
+========================= */
+
+      async function cancelCheckin(uuid) {
+        const confirmCancel = confirm("確認取消報到？");
+
+        if (!confirmCancel) return;
+
+        try {
+          const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+          /* =========================
+           Loading
+        ========================= */
+
+          const btn = event.target;
+
+          btn.disabled = true;
+
+          btn.innerHTML = "處理中...";
+
+          /* =========================
+           API
+        ========================= */
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+
+            body: JSON.stringify({
+              action: "cancelCheckin",
+
+              uuid: uuid,
+
+              operator: currentUser.name,
+            }),
+          });
+
+          const result = await response.json();
+
+          /* =========================
+           Success
+        ========================= */
+
+          if (result.success) {
+            const member = currentCheckinMembers.find(
+              (item) => item.uuid === uuid,
+            );
+
+            if (member) {
+              // 清空狀態
+
+              member.checkinStatus = "未報到";
+
+              member.checkinTime = "";
+
+              member.note = "";
+
+              member.absent = "";
+
+              member.interviewStatus = "未開始";
+            }
+
+            /* =========================
+               即時更新畫面
+            ========================= */
+
+            renderCheckinTable();
+
+            /* =========================
+               Toast
+            ========================= */
+
+            showToast(
+              `已取消報到
+                (${member.name})`,
+
+              "success",
+            );
+          } else {
+            /* =========================
+           Fail
+        ========================= */
+            showToast(
+              result.message || "取消報到失敗",
+
+              "error",
+            );
+          }
+        } catch (err) {
+          console.error(err);
+
+          showToast("系統連線失敗", "error");
+        }
+      }
+
+      /* =========================
+Filter Checkin
+========================= */
+
+      function filterCheckinList() {
+        const keyword = document
+          .getElementById("checkinSearch")
+          .value.trim()
+          .toLowerCase();
+
+        // 無關鍵字
+
+        if (keyword === "") {
+          filteredCheckinMembers = currentCheckinMembers;
+        }
+        // 搜尋
+        else {
+          filteredCheckinMembers = currentCheckinMembers.filter(
+            (member) =>
+              (member.name || "").toLowerCase().includes(keyword) ||
+              (member.idNumber || "").toLowerCase().includes(keyword),
+          );
+        }
+
+        // 回第一頁
+
+        currentCheckinPage = 1;
+
+        // render
+
+        renderCheckinTable();
+      }
+
+      /* =========================
+Format DateTime
+========================= */
+
+      function formatDateTime(datetime) {
+        if (!datetime) return "-";
+
+        const date = new Date(datetime);
+
+        return date.toLocaleString("zh-TW", {
+          year: "numeric",
+
+          month: "2-digit",
+
+          day: "2-digit",
+
+          hour: "2-digit",
+
+          minute: "2-digit",
+
+          second: "2-digit",
+
+          hour12: false,
+        });
+      }
+
+      /* =========================
+前端時間解析
+========================= */
+
+      function parseFrontDateTime(dateStr, timeStr) {
+        if (!timeStr) return new Date();
+
+        timeStr = String(timeStr);
+
+        const isPM = timeStr.includes("下午");
+
+        const clean = timeStr.replace("上午", "").replace("下午", "").trim();
+
+        let [hour, minute] = clean.split(":");
+
+        hour = parseInt(hour);
+
+        minute = parseInt(minute);
+
+        if (isPM && hour < 12) {
+          hour += 12;
+        }
+
+        if (!isPM && hour === 12) {
+          hour = 0;
+        }
+
+        return new Date(`${dateStr} ${hour}:${minute}:00`);
+      }
+
+      /* =========================
+Checkin Status Class
+========================= */
+
+      function getCheckinStatusClass(status) {
+        switch (status) {
+          case "已報到":
+            return "status-success";
+
+          case "遲到報到":
+            return "status-warning";
+
+          case "未報到":
+            return "status-danger";
+
+          case "尚未開放報到":
+            return "status-info";
+
+          default:
+            return "status-gray";
+        }
+      }
+
+      /* =========================
+Absent Badge
+========================= */
+
+      function getAbsentBadge(absent) {
+        if (absent === "缺考") {
+          return `
+        
+            <span class="status-badge status-absent">
+
+                缺考
+
+            </span>
+
+        `;
+        }
+
+        return "-";
+      }
+      /* =========================
+Interview Status Class
+========================= */
+
+      function getInterviewStatusClass(status) {
+        switch (status) {
+          case "已完成":
+            return "status-primary";
+
+          case "進行中":
+            return "status-warning";
+
+          case "未開始":
+            return "status-gray";
+
+          default:
+            return "status-gray";
+        }
+      }
+
+      /* =========================
+Render Loading Table
+========================= */
+
+      function renderCheckinLoading() {
+        document.getElementById("checkinTableBody").innerHTML = `
+
+        ${Array(6)
+          .fill(
+            `
+    <tr class="skeleton-row">
+
+        <td>
+            <div class="skeleton-box w-40"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-80"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-50"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-70"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-60"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-50"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-50"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-60"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-50"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-40"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-50"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-60"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-50"></div>
+        </td>
+
+        <td>
+            <div class="skeleton-box w-40"></div>
+        </td>
+
+    </tr>
+    `,
+          )
+          .join("")}
+
+    `;
+      }
+
+      /* =========================
+Load Checkin Logs
+========================= */
+
+      async function loadCheckinLogs() {
+        try {
+          renderLogsLoading();
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+
+            body: JSON.stringify({
+              action: "getCheckinLogs",
+            }),
+          });
+
+          const result = await response.json();
+
+          const data = result.data || [];
+
+          renderCheckinLogs(data);
+
+          updateLogSummary(data);
+        } catch (err) {
+          console.error(err);
+
+          showToast("載入報到紀錄失敗", "error");
+        }
+      }
+
+      /* =========================
+Render Checkin Logs
+========================= */
+
+      function renderCheckinLogs(data) {
+        const tbody = document.getElementById("checkinLogsTable");
+
+        if (data.length === 0) {
+          tbody.innerHTML = `
+      <tr>
+        <td colspan="9">
+          尚無報到紀錄
+        </td>
+      </tr>
+    `;
+
+          return;
+        }
+
+        tbody.innerHTML = data
+          .map(
+            (item) => `
+
+    <tr>
+
+      <td>${item.name || "-"}</td>
+
+      <td>${item.idNumber || "-"}</td>
+
+      <td>${item.activityCode || "-"}</td>
+
+      <td>${item.date || "-"}</td>
+
+      <td>
+        ${renderStatusBadge(item.checkinStatus)}
+      </td>
+
+      <td>
+        ${renderInterviewBadge(item.interviewStatus)}
+      </td>
+
+      <td>${item.checkinTime || "-"}</td>
+
+      <td>${item.note || "-"}</td>
+
+      <td>${item.operator || "-"}</td>
+
+    </tr>
+
+  `,
+          )
+          .join("");
+      }
+
+      /* =========================
+Update Summary
+========================= */
+
+      function updateLogSummary(data) {
+        const total = data.filter((x) => x.checkinStatus === "已報到").length;
+
+        const late = data.filter((x) => x.note === "遲到報到").length;
+
+        const absent = data.filter((x) => x.absent === "缺考").length;
+
+        document.getElementById("totalCheckinCount").innerText = total;
+
+        document.getElementById("lateCheckinCount").innerText = late;
+
+        document.getElementById("absentCount").innerText = absent;
+      }
+
+      /* =========================
+Loading
+========================= */
+
+      function renderLogsLoading() {
+        document.getElementById("checkinLogsTable").innerHTML = `
+
+    ${Array(6)
+      .fill(
+        `
+
+      <tr class="skeleton-row">
+
+        <td><div class="skeleton-box skeleton-sm"></div></td>
+        <td><div class="skeleton-box skeleton-md"></div></td>
+        <td><div class="skeleton-box skeleton-sm"></div></td>
+        <td><div class="skeleton-box skeleton-md"></div></td>
+        <td><div class="skeleton-box skeleton-sm"></div></td>
+        <td><div class="skeleton-box skeleton-sm"></div></td>
+        <td><div class="skeleton-box skeleton-md"></div></td>
+        <td><div class="skeleton-box skeleton-sm"></div></td>
+        <td><div class="skeleton-box skeleton-sm"></div></td>
+
+      </tr>
+
+    `,
+      )
+      .join("")}
+
+  `;
+      }
+      /* =========================
+Auto Login
+========================= */
+
+      window.onload = function () {
+        const user = localStorage.getItem("currentUser");
+
+        if (user) {
+          showDashboard(JSON.parse(user));
+        }
+      };
+    </script>
+
+    <div id="toastContainer"></div>
+  </body>
+</html>
