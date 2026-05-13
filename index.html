@@ -115,6 +115,17 @@
               活動管理
             </button>
 
+            <button
+              class="menu-btn"
+              onclick="showPage('checkinActivities', this)"
+            >
+              現場報到
+            </button>
+
+            <button class="menu-btn" onclick="showPage('checkinRecords', this)">
+              報到紀錄
+            </button>
+
             <button class="menu-btn" onclick="showPage('settings', this)">
               系統設定
             </button>
@@ -151,7 +162,16 @@
           <!-- Interview -->
 
           <div id="menuInterview" class="d-none">
-            <button class="menu-btn active">面試叫號</button>
+            <button
+              class="menu-btn active"
+              onclick="showPage('dashboard', this)"
+            >
+              系統總覽
+            </button>
+
+            <button class="menu-btn" onclick="showPage('interviewCalling', this)">
+              面試叫號
+            </button>
           </div>
 
           <!-- Readonly -->
@@ -178,63 +198,21 @@
             <div id="page-dashboard">
               <div class="page-title">系統總覽</div>
 
-              <div class="row g-4">
-                <!-- 今日活動 -->
-
-                <div class="col-md-3">
-                  <div class="stat-card">
-                    <div class="stat-title">今日活動</div>
-
-                    <div
-                      id="todayActivityCount"
-                      class="stat-value loading-number"
-                    >
-                      <div class="number-skeleton"></div>
-                    </div>
+              <div class="dashboard-clock-wide">
+                <div>
+                  <div class="dashboard-info-title">中原標準時間</div>
+                  <div id="dashboardClock" class="dashboard-clock">
+                    --:--:--
                   </div>
                 </div>
 
-                <!-- 已報到 -->
-
-                <div class="col-md-3">
-                  <div class="stat-card">
-                    <div class="stat-title">已報到</div>
-
-                    <div id="checkedinCount" class="stat-value loading-number">
-                      <div class="number-skeleton"></div>
-                    </div>
-                  </div>
+                <div id="dashboardClockDate" class="dashboard-clock-date">
+                  ----/--/--
                 </div>
+              </div>
 
-                <!-- 面試完成 -->
-
-                <div class="col-md-3">
-                  <div class="stat-card">
-                    <div class="stat-title">面試完成</div>
-
-                    <div
-                      id="interviewedCount"
-                      class="stat-value loading-number"
-                    >
-                      <div class="number-skeleton"></div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 缺考 -->
-
-                <div class="col-md-3">
-                  <div class="stat-card">
-                    <div class="stat-title">缺考</div>
-
-                    <div
-                      id="absentCount"
-                      class="stat-value text-danger loading-number"
-                    >
-                      <div class="number-skeleton"></div>
-                    </div>
-                  </div>
-                </div>
+              <div id="dashboardTodayOverview" class="dashboard-today-overview">
+                <div class="dashboard-empty">今日活動資料載入中...</div>
               </div>
             </div>
 
@@ -252,6 +230,39 @@
                 </button>
               </div>
 
+              <div id="adminActivitySummary" class="admin-summary-grid"></div>
+
+              <div class="admin-filter-row">
+                <input
+                  type="text"
+                  id="adminActivitySearch"
+                  class="admin-filter-input"
+                  placeholder="搜尋活動名稱 / 活動代碼 / 地點"
+                  onkeyup="filterAdminActivities()"
+                />
+
+                <input
+                  type="date"
+                  id="adminActivityDateFilter"
+                  class="admin-filter-input"
+                  onchange="filterAdminActivities()"
+                />
+
+                <select
+                  id="adminCheckinOpenFilter"
+                  class="admin-filter-input"
+                  onchange="filterAdminActivities()"
+                >
+                  <option value="">全部報到狀態</option>
+                  <option value="open">已開放報到</option>
+                  <option value="closed">未開放報到</option>
+                </select>
+
+                <button class="btn btn-outline-secondary" onclick="resetAdminActivityFilters()">
+                  清除篩選
+                </button>
+              </div>
+
               <div class="row g-4" id="activityList"></div>
             </div>
 
@@ -260,7 +271,97 @@
             <div id="page-settings" class="d-none">
               <div class="page-title">系統設定</div>
 
-              <div class="content-card">系統設定功能開發中</div>
+              <div id="adminSettingsPanel" class="admin-settings-grid"></div>
+            </div>
+
+            <!-- Interview Calling -->
+            <div id="page-interviewCalling" class="page d-none">
+              <div class="page-header">
+                <h1 class="page-title">面試叫號</h1>
+                <div class="page-subtitle">
+                  選擇活動後可進行叫號與面試狀態更新
+                </div>
+              </div>
+
+              <div class="interview-toolbar">
+                <select
+                  id="interviewActivitySelect"
+                  class="interview-select"
+                  onchange="loadInterviewMembers()"
+                >
+                  <option value="">選擇活動</option>
+                </select>
+
+                <select
+                  id="interviewLocationFilter"
+                  class="interview-select"
+                  onchange="filterInterviewMembers()"
+                >
+                  <option value="">全部地點</option>
+                </select>
+
+                <select
+                  id="interviewStatusPageFilter"
+                  class="interview-select"
+                  onchange="filterInterviewMembers()"
+                >
+                  <option value="">全部面試狀態</option>
+                </select>
+
+                <button class="btn btn-primary" onclick="reloadInterviewMembers()">
+                  重新整理
+                </button>
+              </div>
+
+              <div id="interviewSummary" class="interview-summary-grid"></div>
+
+              <div class="interview-batch-bar">
+                <button class="btn btn-primary" onclick="batchCallInterviewMembers()">
+                  批次叫號並標記進行中
+                </button>
+
+                <button class="btn btn-success" onclick="batchCompleteInterviewMembers()">
+                  批次完成面試
+                </button>
+
+                <span id="interviewSelectedCount" class="interview-selected-count">
+                  叫號 0 人｜完成 0 人
+                </span>
+              </div>
+
+              <div class="table-card">
+                <table class="table align-middle interview-table">
+                  <thead>
+                    <tr>
+                      <th>叫號</th>
+                      <th>完成</th>
+                      <th>
+                        <input
+                          type="checkbox"
+                          id="interviewSelectAll"
+                          onchange="toggleAllInterviewCallSelection(this.checked)"
+                        />
+                      </th>
+                      <th>活動編號</th>
+                      <th>姓名</th>
+                      <th>地點</th>
+                      <th>面試時間</th>
+                      <th>報到狀態</th>
+                      <th>目前叫號</th>
+                      <th>面試狀態</th>
+                      <th>報到時間</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="interviewTableBody">
+                    <tr>
+                      <td colspan="11" class="empty-cell">請先選擇活動</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div id="interviewPagination" class="pagination-wrapper"></div>
             </div>
 
             <!-- 現場報到頁 -->
@@ -291,6 +392,12 @@
 
               <div class="record-summary-grid">
                 <div class="record-card">
+                  <div class="record-card-title">紀錄總筆數</div>
+
+                  <div class="record-card-value" id="recordTotalCount">0</div>
+                </div>
+
+                <div class="record-card">
                   <div class="record-card-title">已報到人數</div>
 
                   <div
@@ -316,6 +423,14 @@
                     0
                   </div>
                 </div>
+
+                <div class="record-card">
+                  <div class="record-card-title">面試完成</div>
+
+                  <div class="record-card-value primary" id="recordInterviewDoneCount">
+                    0
+                  </div>
+                </div>
               </div>
 
               <!-- Toolbar -->
@@ -331,6 +446,21 @@
                   onkeyup="filterCheckinRecords()"
                 />
 
+                <input
+                  type="date"
+                  id="recordDateFilter"
+                  class="record-date-input"
+                  onchange="filterCheckinRecords()"
+                />
+
+                <select
+                  id="recordActivityFilter"
+                  class="record-select"
+                  onchange="filterCheckinRecords()"
+                >
+                  <option value="">全部活動</option>
+                </select>
+
                 <!-- 狀態 -->
 
                 <select
@@ -345,6 +475,14 @@
                   <option value="遲到報到">遲到報到</option>
 
                   <option value="缺考">缺考</option>
+                </select>
+
+                <select
+                  id="recordInterviewFilter"
+                  class="record-select"
+                  onchange="filterCheckinRecords()"
+                >
+                  <option value="">全部面試</option>
                 </select>
 
                 <!-- Button -->
@@ -421,6 +559,7 @@
                     class="search-input"
                     placeholder="搜尋姓名 / 身分證字號"
                     onkeyup="filterCheckinList()"
+                    onkeydown="handleCheckinSearchKeydown(event)"
                   />
                 </div>
 
@@ -455,12 +594,54 @@
                   </button>
                 </div>
               </div>
-              <p></p>
+
+              <div id="checkinSummary" class="checkin-summary-grid"></div>
+
+              <div class="checkin-filter-row">
+                <div class="filter-wrapper">
+                  <label class="filter-label" for="locationFilter"
+                    >活動地點</label
+                  >
+                  <select
+                    id="locationFilter"
+                    class="filter-select"
+                    onchange="filterCheckinList()"
+                  >
+                    <option value="">全部地點</option>
+                  </select>
+                </div>
+
+                <div class="filter-wrapper">
+                  <label class="filter-label" for="checkinStatusFilter"
+                    >報到狀態</label
+                  >
+                  <select
+                    id="checkinStatusFilter"
+                    class="filter-select"
+                    onchange="filterCheckinList()"
+                  >
+                    <option value="">全部報到狀態</option>
+                  </select>
+                </div>
+
+                <div class="filter-wrapper">
+                  <label class="filter-label" for="interviewStatusFilter"
+                    >面試狀態</label
+                  >
+                  <select
+                    id="interviewStatusFilter"
+                    class="filter-select"
+                    onchange="filterCheckinList()"
+                  >
+                    <option value="">全部面試狀態</option>
+                  </select>
+                </div>
+              </div>
 
               <!-- Table -->
 
               <div class="table-card">
-                <table class="table align-middle">
+                <table class="table align-middle checkin-table">
                   <thead>
                     <tr>
                       <th>姓名</th>
@@ -678,6 +859,17 @@
               </div>
 
               <div class="col-md-6">
+                <label class="form-label"> 活動狀態 </label>
+
+                <select class="form-select" id="editStatus">
+                  <option value="草稿">草稿</option>
+                  <option value="進行中">進行中</option>
+                  <option value="已結束">已結束</option>
+                  <option value="停用">停用</option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
                 <label class="form-label"> 開始時間 </label>
 
                 <input type="time" class="form-control" id="editStartTime" />
@@ -734,13 +926,31 @@
     <script>
       let dashboardLoaded = false;
 
+      let dashboardActivitiesLoaded = false;
+
+      let dashboardOverviewRendered = false;
+
+      let dashboardTimer = null;
+
+      let dashboardClockTimer = null;
+
+      let dashboardDetailsLastUpdated = 0;
+
+      let dashboardTodayActivityCodes = new Set();
+
+      let dashboardTodayActivities = [];
+
       let activitiesCache = [];
+
+      let filteredAdminActivities = [];
 
       let filteredCheckinMembers = [];
 
+      let checkinRecordsCache = [];
+
       /* =========================
-Pagination
-========================= */
+      Pagination
+      ========================= */
 
       let currentCheckinPage = 1;
 
@@ -750,16 +960,38 @@ Pagination
 
       let currentActivityCode = "";
 
+      let checkinProcessingUuids = new Set();
+
+      let checkinRealtimeTimer = null;
+
+      let checkinRealtimeSyncing = false;
+
+      let interviewActivitiesCache = [];
+
+      let currentInterviewMembers = [];
+
+      let filteredInterviewMembers = [];
+
+      let currentInterviewActivityCode = "";
+
+      let selectedInterviewCallUuids = new Set();
+
+      let selectedInterviewCompleteUuids = new Set();
+
+      let currentInterviewPage = 1;
+
+      const INTERVIEW_PAGE_SIZE = 10;
+
       /* =========================
-API URL
-========================= */
+      API URL
+      ========================= */
 
       const API_URL =
-        "https://script.google.com/macros/s/AKfycbzmmbDqXcoqz1C5f9IbRa-aAzswCmwMCz-0pqouRRijSTssXNu95D7mb3g5p8sgyT3J/exec";
+        "https://script.google.com/macros/s/AKfycbxMK93bA-Kcsls4vqgvM7oOOp_hrWQr_2Uy_rK9lAMhwQb9HwIUycQLrVqEBIxIihvi/exec";
 
       /* =========================
-Login
-========================= */
+      Login
+      ========================= */
 
       async function login() {
         const account = document.getElementById("account").value.trim();
@@ -832,8 +1064,8 @@ Login
       }
 
       /* =========================
-Error
-========================= */
+      Error
+      ========================= */
 
       function showError(text) {
         const msg = document.getElementById("msg");
@@ -844,11 +1076,13 @@ Error
       }
 
       /* =========================
-Dashboard
-========================= */
+      Dashboard
+      ========================= */
 
       async function loadDashboard() {
         try {
+          dashboardActivitiesLoaded = false;
+
           const response = await fetch(API_URL, {
             method: "POST",
 
@@ -865,17 +1099,7 @@ Dashboard
 
           const activities = result.data || [];
 
-          // 台灣日期
-
-          const today = new Date();
-
-          const year = today.getFullYear();
-
-          const month = String(today.getMonth() + 1).padStart(2, "0");
-
-          const day = String(today.getDate()).padStart(2, "0");
-
-          const todayStr = `${year}/${month}/${day}`;
+          const todayStr = getTaipeiDateString();
 
           // 今日活動
 
@@ -883,22 +1107,366 @@ Dashboard
             (activity) => formatDate(activity.date) === todayStr,
           );
 
-          // 寫入數據
-          const todayEl = document.getElementById("todayActivityCount");
+          dashboardTodayActivities = todayActivities;
 
-          todayEl.innerHTML = todayActivities.length;
-
-          document.getElementById("checkedinCount").innerHTML = 0;
-
-          document.getElementById("interviewedCount").innerHTML = 0;
-
-          document.getElementById("absentCount").innerHTML = 0;
+          dashboardTodayActivityCodes = new Set(
+            todayActivities
+              .map((activity) => activity.code || activity.activityCode)
+              .filter(Boolean),
+          );
 
           // 已載入
           dashboardLoaded = true;
+          dashboardActivitiesLoaded = true;
+
+          await updateDashboardDetails();
+        } catch (err) {
+          console.error(err);
+          dashboardActivitiesLoaded = true;
+        }
+      }
+
+      async function updateDashboardDetails() {
+        try {
+          if (!dashboardActivitiesLoaded) return;
+
+          if (dashboardTodayActivities.length === 0) {
+            if (!dashboardOverviewRendered) {
+              renderDashboardOverview([]);
+            }
+            return;
+          }
+
+          const todayMembers = await loadTodayDashboardMembers();
+
+          renderDashboardOverview(todayMembers);
         } catch (err) {
           console.error(err);
         }
+      }
+
+      async function loadTodayDashboardMembers() {
+        const memberGroups = await Promise.all(
+          dashboardTodayActivities.map(async (activity) => {
+            const response = await fetch(API_URL, {
+              method: "POST",
+
+              headers: {
+                "Content-Type": "text/plain;charset=utf-8",
+              },
+
+              body: JSON.stringify({
+                action: "getCheckinMembers",
+                activityCode: activity.code || activity.activityCode,
+              }),
+            });
+
+            const result = await response.json();
+
+            const activityCode = activity.code || activity.activityCode || "";
+
+            return (result.data || [])
+              .filter((member) => isMemberInActivity(member, activityCode))
+              .map((member) => ({
+                ...member,
+                activityCode:
+                  member.activityCode ||
+                  member.activityNumber ||
+                  activity.code ||
+                  activity.activityCode,
+                activityName: member.activityName || activity.name,
+                date: member.date || activity.date,
+              }));
+          }),
+        );
+
+        return memberGroups.flat();
+      }
+
+      function isMemberInActivity(member, activityCode) {
+        if (!activityCode) return true;
+
+        const memberActivityCode =
+          member.activityCode || member.activityNumber || member.code || "";
+
+        return !memberActivityCode || memberActivityCode === activityCode;
+      }
+
+      function isTodayDashboardRecord(item) {
+        const activityCode =
+          item.activityCode || item.activityNumber || item.code || "";
+
+        if (
+          activityCode &&
+          dashboardTodayActivityCodes.size > 0 &&
+          dashboardTodayActivityCodes.has(activityCode)
+        ) {
+          return true;
+        }
+
+        const todayStr = getTaipeiDateString();
+
+        return (
+          formatDate(item.date || item.activityDate) === todayStr ||
+          formatDate(item.checkinDate) === todayStr ||
+          formatDate(item.checkinTime) === todayStr
+        );
+      }
+
+      function isCheckedInRecord(item) {
+        return (
+          !isAbsentRecord(item) &&
+          (item.checkinTime ||
+            item.checkinStatus === "已報到" ||
+            item.checkinStatus === "遲到報到" ||
+            item.checkinStatus === "報到")
+        );
+      }
+
+      function isInterviewCompletedRecord(item) {
+        const status = item.interviewStatus || "";
+
+        return status === "已完成" || status.includes("完成");
+      }
+
+      function shouldHideFromCheckinTable(member) {
+        return isInterviewCompletedRecord(member);
+      }
+
+      function isAbsentRecord(item) {
+        return (
+          item.checkinStatus === "缺考" ||
+          item.absent === "缺考" ||
+          item.note === "缺考"
+        );
+      }
+
+      function getTaipeiDateString() {
+        const now = new Date();
+        const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+        const taipeiDate = new Date(utc + 8 * 60 * 60000);
+
+        const year = taipeiDate.getFullYear();
+        const month = String(taipeiDate.getMonth() + 1).padStart(2, "0");
+        const day = String(taipeiDate.getDate()).padStart(2, "0");
+
+        return `${year}/${month}/${day}`;
+      }
+
+      function renderDashboardOverview(members) {
+        const container = document.getElementById("dashboardTodayOverview");
+
+        dashboardOverviewRendered = true;
+
+        if (dashboardTodayActivities.length === 0) {
+          container.innerHTML = `
+            <div class="dashboard-empty">
+              今日尚無活動
+            </div>
+          `;
+          return;
+        }
+
+        const groups = groupDashboardMembersByActivity(members);
+
+        container.innerHTML = `
+          <div class="dashboard-section-card">
+            <div class="dashboard-section-title">當日活動</div>
+            <div class="dashboard-activity-list">
+              ${groups
+                .map(
+                  (group) => `
+                    <div class="dashboard-activity-pill">
+                      <span>${escapeHtml(group.name)}</span>
+                      <strong>${escapeHtml(group.code || "-")}</strong>
+                    </div>
+                  `,
+                )
+                .join("")}
+            </div>
+          </div>
+
+          <div class="dashboard-section-card">
+            <div class="dashboard-section-title">各活動目前狀態</div>
+            <div class="dashboard-table">
+              <div class="dashboard-table-row dashboard-table-head">
+                <div>活動名稱</div>
+                <div>活動代碼</div>
+                <div>已報到</div>
+                <div>尚未報到</div>
+              </div>
+              ${groups
+                .map(
+                  (group) => `
+                    <div class="dashboard-table-row">
+                      <div>${escapeHtml(group.name)}</div>
+                      <div>${escapeHtml(group.code || "-")}</div>
+                      <div class="dashboard-number success">${group.checkedInCount}</div>
+                      <div class="dashboard-number warning">${group.uncheckedCount}</div>
+                    </div>
+                  `,
+                )
+                .join("")}
+            </div>
+          </div>
+
+          <div class="dashboard-section-card">
+            <div class="dashboard-section-title">各活動目前叫號</div>
+            <div class="dashboard-table">
+              <div class="dashboard-table-row dashboard-table-head">
+                <div>活動名稱</div>
+                <div>場地</div>
+                <div>目前叫號</div>
+                <div>人員</div>
+              </div>
+              ${groups.map(renderDashboardCallingRows).join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      function groupDashboardMembersByActivity(members) {
+        return dashboardTodayActivities.map((activity) => {
+          const activityCode = activity.code || activity.activityCode || "";
+
+          const activityMembers = members.filter(
+            (member) => member.activityCode === activityCode,
+          );
+
+          const checkedInCount = activityMembers.filter(isCheckedInRecord).length;
+
+          const uncheckedCount = activityMembers.filter(
+            (member) => !isCheckedInRecord(member),
+          ).length;
+
+          return {
+            code: activityCode,
+            name: activity.name || activityCode || "未命名活動",
+            members: activityMembers,
+            checkedInCount,
+            uncheckedCount,
+            callingByLocation: getDashboardCallingByLocation(activityMembers),
+          };
+        });
+      }
+
+      function getDashboardCallingByLocation(members) {
+        const callingMap = new Map();
+
+        members
+          .filter((member) => member.currentCalling)
+          .forEach((member) => {
+            const location = member.location || "未設定場地";
+            const callNumber = getDashboardCallNumber(member);
+            const current = callingMap.get(location);
+
+            if (!current || callNumber.value > current.value) {
+              callingMap.set(location, {
+                location,
+                label: callNumber.label,
+                value: callNumber.value,
+                name: member.name || "-",
+              });
+            }
+          });
+
+        return [...callingMap.values()];
+      }
+
+      function getDashboardCallNumber(member) {
+        const label =
+          member.activityNumber ||
+          member.callNumber ||
+          member.sequence ||
+          member.number ||
+          "-";
+
+        const match = String(label).match(/\d+/g);
+
+        return {
+          label,
+          value: match ? Number(match.join("")) : 0,
+        };
+      }
+
+      function renderDashboardCallingRows(group) {
+        if (group.callingByLocation.length === 0) {
+          return `
+            <div class="dashboard-table-row">
+              <div>${escapeHtml(group.name)}</div>
+              <div>尚無叫號</div>
+              <div class="dashboard-number muted">-</div>
+              <div>-</div>
+            </div>
+          `;
+        }
+
+        return group.callingByLocation
+          .map(
+            (calling) => `
+              <div class="dashboard-table-row">
+                <div>${escapeHtml(group.name)}</div>
+                <div>${escapeHtml(calling.location)}</div>
+                <div class="dashboard-number primary">${escapeHtml(calling.label)}</div>
+                <div>${escapeHtml(calling.name)}</div>
+              </div>
+            `,
+          )
+          .join("");
+      }
+
+      async function setupDashboardRealtime() {
+        setupDashboardClock();
+        
+        if (dashboardTimer) return;
+
+        if (dashboardActivitiesLoaded) {
+          updateDashboardDetails();
+        }
+        dashboardDetailsLastUpdated = Date.now();
+
+        dashboardTimer = setInterval(() => {
+          if (Date.now() - dashboardDetailsLastUpdated >= 10000) {
+            dashboardDetailsLastUpdated = Date.now();
+            if (dashboardActivitiesLoaded) {
+              updateDashboardDetails();
+            }
+          }
+        }, 1000);
+      }
+
+      function setupDashboardClock() {
+        if (dashboardClockTimer) {
+          clearTimeout(dashboardClockTimer);
+        }
+
+        updateDashboardClock();
+
+        const now = new Date();
+        const delay = 1000 - now.getMilliseconds();
+
+        dashboardClockTimer = setTimeout(setupDashboardClock, delay);
+      }
+
+      function updateDashboardClock() {
+        const now = new Date();
+        const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+        const cstDate = new Date(utc + 8 * 60 * 60000);
+
+        document.getElementById("dashboardClock").innerText =
+          cstDate.toLocaleTimeString("zh-TW", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          });
+
+        document.getElementById("dashboardClockDate").innerText =
+          cstDate.toLocaleDateString("zh-TW", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          });
       }
 
       function showDashboard(user) {
@@ -909,10 +1477,10 @@ Dashboard
         document.getElementById("dashboardPage").classList.remove("d-none");
 
         document.getElementById("welcomeText").innerHTML = `
-      歡迎：<br>
-      ${user.name}<br>
-      (${user.role})
-  `;
+            歡迎：<br>
+            ${user.name}<br>
+            (${user.role})
+        `;
 
         switch (user.role) {
           case "admin":
@@ -943,10 +1511,12 @@ Dashboard
         showPage("dashboard", firstMenu);
       }
       /* =========================
-Logout
-========================= */
+      Logout
+      ========================= */
 
       function logout() {
+        stopCheckinRealtimeSync();
+
         document.getElementById("dashboardPage").classList.add("d-none");
 
         document.getElementById("loginPage").classList.remove("d-none");
@@ -967,30 +1537,42 @@ Logout
 
         localStorage.removeItem("currentUser");
 
+        if (dashboardTimer) {
+          clearInterval(dashboardTimer);
+          dashboardTimer = null;
+        }
+
+        if (dashboardClockTimer) {
+          clearTimeout(dashboardClockTimer);
+          dashboardClockTimer = null;
+        }
+
         dashboardLoaded = false;
+        dashboardActivitiesLoaded = false;
+        dashboardOverviewRendered = false;
 
         location.reload();
       }
 
       /* =========================
-Load Activities
-========================= */
+      Load Activities
+      ========================= */
 
       document.getElementById("activityList").innerHTML = `
 
-  <div class="loading-wrapper">
+        <div class="loading-wrapper">
 
-    <div class="loading-spinner"></div>
+          <div class="loading-spinner"></div>
 
-    <div class="loading-text">
+          <div class="loading-text">
 
-      載入活動中...
+            載入活動中...
 
-    </div>
+          </div>
 
-  </div>
+        </div>
 
-`;
+      `;
 
       async function loadActivities() {
         const container = document.getElementById("activityList");
@@ -999,19 +1581,19 @@ Load Activities
 
         container.innerHTML = `
 
-    <div class="loading-wrapper">
+          <div class="loading-wrapper">
 
-      <div class="loading-spinner"></div>
+            <div class="loading-spinner"></div>
 
-      <div class="loading-text">
+            <div class="loading-text">
 
-        載入活動中...
+              載入活動中...
 
-      </div>
+            </div>
 
-    </div>
+          </div>
 
-  `;
+        `;
 
         try {
           const response = await fetch(API_URL, {
@@ -1035,30 +1617,33 @@ Load Activities
           if (res.success) {
             activitiesCache = res.data;
 
-            renderActivities(activitiesCache);
+            filteredAdminActivities = activitiesCache;
+
+            renderAdminActivitySummary(activitiesCache);
+            renderActivities(filteredAdminActivities);
           } else {
             container.innerHTML = `
 
-        <div class="alert alert-danger">
+              <div class="alert alert-danger">
 
-          活動載入失敗
+                活動載入失敗
 
-        </div>
+              </div>
 
-      `;
+            `;
           }
         } catch (err) {
           console.error(err);
 
           container.innerHTML = `
 
-      <div class="alert alert-danger">
+            <div class="alert alert-danger">
 
-        系統連線失敗
+              系統連線失敗
 
-      </div>
+            </div>
 
-    `;
+          `;
         }
       }
 
@@ -1188,8 +1773,8 @@ Load Activities
       }
 
       /* =========================
-Update Activity
-========================= */
+      Update Activity
+      ========================= */
 
       async function updateActivity() {
         const saveBtn = event.target;
@@ -1220,6 +1805,8 @@ Update Activity
               endTime: document.getElementById("editEndTime").value,
 
               location: document.getElementById("editLocation").value,
+
+              status: document.getElementById("editStatus").value,
             }),
           });
 
@@ -1250,8 +1837,8 @@ Update Activity
       }
 
       /* =========================
-Toast
-========================= */
+      Toast
+      ========================= */
 
       function showToast(message, type = "success") {
         const oldToast = document.querySelector(".custom-toast");
@@ -1282,8 +1869,8 @@ Toast
       }
 
       /* =========================
-日期格式化
-========================= */
+      日期格式化
+      ========================= */
 
       function formatDate(dateStr) {
         if (!dateStr) return "";
@@ -1318,8 +1905,8 @@ Toast
       }
 
       /* =========================
-時間格式化
-========================= */
+      時間格式化
+      ========================= */
 
       function formatTime(timeStr) {
         if (!timeStr) return "-";
@@ -1345,124 +1932,228 @@ Toast
       }
 
       /* =========================
-Render Activities
-========================= */
+      Render Activities
+      ========================= */
 
       function renderActivities(activities) {
         const container = document.getElementById("activityList");
+
+        renderAdminActivitySummary(activitiesCache);
+
+        if (activities.length === 0) {
+          container.innerHTML = `
+            <div class="col-12">
+              <div class="content-card admin-empty-state">
+                查無符合條件的活動
+              </div>
+            </div>
+          `;
+          return;
+        }
 
         let html = "";
 
         activities.forEach((activity) => {
           html += `
 
-      <div class="col-lg-6">
+            <div class="col-lg-6">
 
-        <div class="activity-card">
+              <div class="activity-card">
 
-          <div class="activity-title">
+                <div class="activity-title">
 
-            ${activity.name}
+                  ${activity.name}
 
-          </div>
+                </div>
 
-          <div class="activity-meta">
+                <div class="activity-meta">
 
-            活動代碼：
-            ${activity.code}
-            <br>
+                  活動代碼：
+                  ${activity.code}
+                  <br>
 
-            活動類型：
-            ${activity.type}
-            <br>
+                  活動類型：
+                  ${activity.type}
+                  <br>
 
-            活動日期：
-            ${formatDate(activity.date)}
-            <br>
+                  活動日期：
+                  ${formatDate(activity.date)}
+                  <br>
 
-            活動開始時間：
-            ${formatTime(activity.startTime)}
-            <br>
+                  活動開始時間：
+                  ${formatTime(activity.startTime)}
+                  <br>
 
-            活動結束時間：
-            ${formatTime(activity.endTime)}
-            <br>
-            
+                  活動結束時間：
+                  ${formatTime(activity.endTime)}
+                  <br>
 
-            活動地點：
-            ${activity.location}
 
-          </div>
+                  活動地點：
+                  ${activity.location}
 
-          <div
-            class="activity-status status-draft"
-          >
+                </div>
 
-            ${activity.status}
+                <div
+                  class="activity-status ${getActivityStatusClass(activity.status)}"
+                >
 
-          </div>
+                  ${activity.status}
 
-          <div class="activity-actions">
+                </div>
 
-  <!-- 管理活動 -->
+                <div class="activity-actions">
 
-  <button
-    class="btn btn-primary"
-    onclick='openEditModal(${JSON.stringify(activity)})'
-  >
-    管理活動
-  </button>
+        <!-- 管理活動 -->
 
-  <!-- 報到開關 -->
+        <button
+          class="btn btn-primary"
+          onclick='openEditModal(${JSON.stringify(activity)})'
+        >
+          管理活動
+        </button>
 
-  <div
-    class="
-      form-check
-      form-switch
-      d-flex
-      align-items-center
-      ms-2
-    ">
+        <!-- 報到開關 -->
 
-    <input
-      class="form-check-input"
-      type="checkbox"
+        <div
+          class="
+            form-check
+            form-switch
+            d-flex
+            align-items-center
+            ms-2
+          ">
 
-      ${activity.checkinOpen ? "checked" : ""}
+          <input
+            class="form-check-input"
+            type="checkbox"
 
-      onchange="
-        toggleCheckin(
-          '${activity.uuid}',
-          this.checked
-        )
-      ">
+            ${activity.checkinOpen ? "checked" : ""}
 
-    <label
-      class="
-        form-check-label
-        ms-2
-      ">
+            onchange="
+              toggleCheckin(
+                '${activity.uuid}',
+                this.checked
+              )
+            ">
 
-      開放報到
+          <label
+            class="
+              form-check-label
+              ms-2
+            ">
 
-    </label>
+            開放報到
 
-  </div>
-
-</div>
+          </label>
 
         </div>
 
       </div>
 
-    `;
+              </div>
+
+            </div>
+
+          `;
         });
 
         container.innerHTML = html;
       }
+
+      function getActivityStatusClass(status) {
+        switch (status) {
+          case "進行中":
+            return "status-open";
+
+          case "已結束":
+            return "status-gray";
+
+          case "停用":
+            return "status-danger";
+
+          case "草稿":
+          default:
+            return "status-draft";
+        }
+      }
+
+      function renderAdminActivitySummary(activities) {
+        const container = document.getElementById("adminActivitySummary");
+
+        if (!container) return;
+
+        const today = getTaipeiDateString();
+        const total = activities.length;
+        const todayCount = activities.filter(
+          (activity) => formatDate(activity.date) === today,
+        ).length;
+        const openCount = activities.filter((activity) => activity.checkinOpen).length;
+        const closedCount = total - openCount;
+
+        container.innerHTML = `
+          <div class="admin-summary-card">
+            <span>活動總數</span>
+            <strong>${total}</strong>
+          </div>
+          <div class="admin-summary-card primary">
+            <span>今日活動</span>
+            <strong>${todayCount}</strong>
+          </div>
+          <div class="admin-summary-card success">
+            <span>已開放報到</span>
+            <strong>${openCount}</strong>
+          </div>
+          <div class="admin-summary-card muted">
+            <span>未開放報到</span>
+            <strong>${closedCount}</strong>
+          </div>
+        `;
+      }
+
+      function filterAdminActivities() {
+        const keyword = document
+          .getElementById("adminActivitySearch")
+          .value.trim()
+          .toLowerCase();
+        const date = document.getElementById("adminActivityDateFilter").value;
+        const openStatus = document.getElementById("adminCheckinOpenFilter").value;
+
+        filteredAdminActivities = activitiesCache.filter((activity) => {
+          const searchable = [
+            activity.code,
+            activity.name,
+            activity.type,
+            activity.location,
+            activity.status,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+          const matchKeyword = !keyword || searchable.includes(keyword);
+          const matchDate = !date || formatDate(activity.date) === date.replaceAll("-", "/");
+          const matchOpen =
+            !openStatus ||
+            (openStatus === "open" && activity.checkinOpen) ||
+            (openStatus === "closed" && !activity.checkinOpen);
+
+          return matchKeyword && matchDate && matchOpen;
+        });
+
+        renderActivities(filteredAdminActivities);
+      }
+
+      function resetAdminActivityFilters() {
+        document.getElementById("adminActivitySearch").value = "";
+        document.getElementById("adminActivityDateFilter").value = "";
+        document.getElementById("adminCheckinOpenFilter").value = "";
+        filteredAdminActivities = activitiesCache;
+        renderActivities(filteredAdminActivities);
+      }
       /* =========================
-Modal
-========================= */
+      Modal
+      ========================= */
 
       function openCreateActivityModal() {
         const modal = new bootstrap.Modal(
@@ -1473,10 +2164,12 @@ Modal
       }
 
       /* =========================
-Page Switch
-========================= */
+      Page Switch
+      ========================= */
 
       function showPage(pageName, btn) {
+        stopCheckinRealtimeSync();
+
         // 隱藏全部頁面
 
         document.querySelectorAll("#systemContent > div").forEach((page) => {
@@ -1496,14 +2189,13 @@ Page Switch
         btn.classList.add("active");
 
         /* =========================
-    特殊頁面
-    ========================= */
+          特殊頁面
+          ========================= */
         // Dashboard
 
         if (pageName === "dashboard") {
-          if (!dashboardLoaded) {
-            loadDashboard();
-          }
+          loadDashboard();
+          setupDashboardRealtime();
         }
         // admin 活動管理
 
@@ -1511,8 +2203,16 @@ Page Switch
           if (activitiesCache.length === 0) {
             loadActivities();
           } else {
-            renderActivities(activitiesCache);
+            filterAdminActivities();
           }
+        }
+
+        if (pageName === "settings") {
+          renderAdminSettings();
+        }
+
+        if (pageName === "interviewCalling") {
+          loadInterviewActivities();
         }
 
         // checkin 活動列表
@@ -1529,16 +2229,495 @@ Page Switch
       }
 
       /* =========================
-Checkin Records
-========================= */
+      Checkin Records
+      ========================= */
 
-      function loadCheckinRecords() {
-        console.log("報到紀錄載入中");
+      async function loadCheckinRecords() {
+        await loadCheckinLogs();
+      }
+
+      async function loadInterviewActivities() {
+        const select = document.getElementById("interviewActivitySelect");
+
+        if (interviewActivitiesCache.length > 0) return;
+
+        select.innerHTML = '<option value="">載入活動中...</option>';
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "getActivities",
+            }),
+          });
+
+          const result = await response.json();
+
+          interviewActivitiesCache = (result.data || []).filter(
+            (activity) => activity.interviewOpen || activity.checkinOpen,
+          );
+
+          if (interviewActivitiesCache.length === 0) {
+            select.innerHTML = '<option value="">目前沒有可面試活動</option>';
+            renderInterviewEmpty("目前沒有可面試活動", true);
+            return;
+          }
+
+          select.innerHTML = `
+            <option value="">選擇活動</option>
+            ${interviewActivitiesCache
+              .map(
+                (activity) => `
+                  <option value="${escapeHtml(activity.code)}">
+                    ${escapeHtml(activity.name)} (${escapeHtml(activity.code)})
+                  </option>
+                `,
+              )
+              .join("")}
+          `;
+        } catch (err) {
+          console.error(err);
+          select.innerHTML = '<option value="">活動載入失敗</option>';
+          showToast("面試活動載入失敗", "error");
+        }
+      }
+
+      async function loadInterviewMembers() {
+        const activityCode = document.getElementById("interviewActivitySelect").value;
+
+        currentInterviewActivityCode = activityCode;
+        selectedInterviewCallUuids.clear();
+        selectedInterviewCompleteUuids.clear();
+        currentInterviewPage = 1;
+
+        if (!activityCode) {
+          currentInterviewMembers = [];
+          filteredInterviewMembers = [];
+          renderInterviewEmpty("請先選擇活動", true);
+          return;
+        }
+
+        renderInterviewLoading();
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "getCheckinMembers",
+              activityCode,
+            }),
+          });
+
+          const result = await response.json();
+
+          currentInterviewMembers = result.data || [];
+          populateInterviewFilters(currentInterviewMembers);
+          filterInterviewMembers();
+        } catch (err) {
+          console.error(err);
+          showToast("面試名單載入失敗", "error");
+          renderInterviewEmpty("面試名單載入失敗", true);
+        }
+      }
+
+      async function reloadInterviewMembers() {
+        if (!currentInterviewActivityCode) {
+          showToast("請先選擇活動", "error");
+          return;
+        }
+
+        await loadInterviewMembers();
+        showToast("面試名單已更新", "success");
+      }
+
+      function populateInterviewFilters(members) {
+        populateInterviewSelect(
+          "interviewLocationFilter",
+          "全部地點",
+          [...new Set(members.map((member) => member.location).filter(Boolean))],
+        );
+
+        populateInterviewSelect(
+          "interviewStatusPageFilter",
+          "全部面試狀態",
+          [
+            ...new Set(
+              members.map((member) => member.interviewStatus).filter(Boolean),
+            ),
+          ],
+        );
+      }
+
+      function populateInterviewSelect(id, defaultText, values) {
+        const select = document.getElementById(id);
+        const current = select.value;
+
+        select.innerHTML = `<option value="">${defaultText}</option>`;
+
+        values.sort().forEach((value) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        });
+
+        select.value = values.includes(current) ? current : "";
+      }
+
+      function filterInterviewMembers() {
+        const location = document.getElementById("interviewLocationFilter").value;
+        const status = document.getElementById("interviewStatusPageFilter").value;
+
+        filteredInterviewMembers = currentInterviewMembers
+          .filter((member) => isCheckedInRecord(member) && !isAbsentRecord(member))
+          .filter((member) => !location || member.location === location)
+          .filter((member) => !status || member.interviewStatus === status)
+          .sort((a, b) => {
+            const locationCompare = String(a.location || "").localeCompare(
+              String(b.location || ""),
+              "zh-Hant",
+            );
+
+            if (locationCompare !== 0) return locationCompare;
+
+            return String(a.activityNumber || "").localeCompare(
+              String(b.activityNumber || ""),
+              "zh-Hant",
+              { numeric: true },
+            );
+          });
+
+        selectedInterviewCallUuids = new Set(
+          [...selectedInterviewCallUuids].filter((uuid) =>
+            filteredInterviewMembers.some((member) => member.uuid === uuid),
+          ),
+        );
+
+        selectedInterviewCompleteUuids = new Set(
+          [...selectedInterviewCompleteUuids].filter((uuid) =>
+            filteredInterviewMembers.some((member) => member.uuid === uuid),
+          ),
+        );
+
+        currentInterviewPage = 1;
+        renderInterviewSummary();
+        renderInterviewTable();
+      }
+
+      function renderInterviewSummary() {
+        const eligible = currentInterviewMembers.filter(
+          (member) => isCheckedInRecord(member) && !isAbsentRecord(member),
+        );
+        const calling = eligible.filter((member) => member.currentCalling).length;
+        const done = eligible.filter(isInterviewCompletedRecord).length;
+        const waiting = eligible.filter(
+          (member) => !isInterviewCompletedRecord(member),
+        ).length;
+
+        document.getElementById("interviewSummary").innerHTML = `
+          <div class="interview-summary-card">
+            <span>可面試人數</span>
+            <strong>${eligible.length}</strong>
+          </div>
+          <div class="interview-summary-card primary">
+            <span>叫號中</span>
+            <strong>${calling}</strong>
+          </div>
+          <div class="interview-summary-card warning">
+            <span>待面試</span>
+            <strong>${waiting}</strong>
+          </div>
+          <div class="interview-summary-card success">
+            <span>已完成</span>
+            <strong>${done}</strong>
+          </div>
+        `;
+      }
+
+      function renderInterviewTable() {
+        const tbody = document.getElementById("interviewTableBody");
+
+        if (filteredInterviewMembers.length === 0) {
+          renderInterviewEmpty("查無符合條件的面試人員", false);
+          return;
+        }
+
+        tbody.innerHTML = filteredInterviewMembers
+          .map(
+            (member) => `
+              <tr class="${member.currentCalling ? "interview-row-calling" : ""}">
+                <td>
+                  <input
+                    type="checkbox"
+                    class="interview-row-checkbox"
+                    value="${escapeHtml(member.uuid)}"
+                    ${selectedInterviewUuids.has(member.uuid) ? "checked" : ""}
+                    onchange="toggleInterviewSelection('${member.uuid}', this.checked)"
+                  />
+                </td>
+                <td>${escapeHtml(member.activityNumber || "-")}</td>
+                <td>${escapeHtml(member.name || "-")}</td>
+                <td>${escapeHtml(member.location || "-")}</td>
+                <td>${escapeHtml(formatInterviewTimeRange(member))}</td>
+                <td>${renderStatusBadge(member.checkinStatus)}</td>
+                <td>${member.currentCalling ? "叫號中" : "-"}</td>
+                <td>${renderInterviewBadge(member.interviewStatus)}</td>
+                <td>${escapeHtml(formatDateTime(member.checkinTime))}</td>
+              </tr>
+            `,
+          )
+          .join("");
+
+        updateInterviewSelectionUI();
+      }
+
+      function renderInterviewLoading() {
+        document.getElementById("interviewTableBody").innerHTML = `
+          ${Array(5)
+            .fill(
+              `
+                <tr class="skeleton-row">
+                  <td colspan="9"><div class="skeleton-box w-70"></div></td>
+                </tr>
+              `,
+            )
+            .join("")}
+        `;
+      }
+
+      function renderInterviewEmpty(message, clearSummary = false) {
+        if (clearSummary) {
+          document.getElementById("interviewSummary").innerHTML = "";
+        }
+
+        document.getElementById("interviewTableBody").innerHTML = `
+          <tr>
+            <td colspan="9" class="empty-cell">${escapeHtml(message)}</td>
+          </tr>
+        `;
+        updateInterviewSelectionUI();
+      }
+
+      function toggleInterviewSelection(uuid, checked) {
+        if (checked) {
+          selectedInterviewUuids.add(uuid);
+        } else {
+          selectedInterviewUuids.delete(uuid);
+        }
+
+        updateInterviewSelectionUI();
+      }
+
+      function toggleAllInterviewSelection(checked) {
+        if (checked) {
+          filteredInterviewMembers
+            .filter((member) => !isInterviewCompletedRecord(member))
+            .forEach((member) => selectedInterviewUuids.add(member.uuid));
+        } else {
+          filteredInterviewMembers.forEach((member) =>
+            selectedInterviewUuids.delete(member.uuid),
+          );
+        }
+
+        document
+          .querySelectorAll(".interview-row-checkbox")
+          .forEach((checkbox) => {
+            checkbox.checked = checked;
+          });
+
+        updateInterviewSelectionUI();
+      }
+
+      function updateInterviewSelectionUI() {
+        const countEl = document.getElementById("interviewSelectedCount");
+        const selectAll = document.getElementById("interviewSelectAll");
+
+        if (countEl) {
+          countEl.innerText = `已選 ${selectedInterviewUuids.size} 人`;
+        }
+
+        if (selectAll) {
+          const selectable = filteredInterviewMembers.filter(
+            (member) => !isInterviewCompletedRecord(member),
+          );
+          selectAll.checked =
+            selectable.length > 0 &&
+            selectable.every((member) => selectedInterviewUuids.has(member.uuid));
+        }
+      }
+
+      function getSelectedInterviewMembers() {
+        return currentInterviewMembers.filter((member) =>
+          selectedInterviewUuids.has(member.uuid),
+        );
+      }
+
+      function formatInterviewTimeRange(member) {
+        const start = formatTime(member.activityStartTime);
+        const end = formatTime(member.activityEndTime);
+
+        if (start === "-" && end === "-") return "-";
+
+        return `${start} - ${end}`;
+      }
+
+      async function batchCallInterviewMembers() {
+        const selected = getSelectedInterviewMembers().filter(
+          (member) => !isInterviewCompletedRecord(member),
+        );
+
+        if (selected.length === 0) {
+          showToast("請先勾選要叫號的人員", "error");
+          return;
+        }
+
+        try {
+          const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "batchSetCurrentCalling",
+              uuids: selected.map((member) => member.uuid),
+              activityCode: currentInterviewActivityCode,
+              operator: currentUser.name || "",
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!result.success) {
+            showToast(result.message || "批次叫號失敗", "error");
+            return;
+          }
+
+          currentInterviewMembers.forEach((member) => {
+            if (selected.some((item) => item.uuid === member.uuid)) {
+              member.currentCalling = "叫號中";
+              member.interviewStatus = "進行中";
+            }
+          });
+
+          selectedInterviewUuids.clear();
+          filterInterviewMembers();
+          showToast(`已批次叫號 ${selected.length} 人`, "success");
+        } catch (err) {
+          console.error(err);
+          showToast("批次叫號失敗，請確認網路", "error");
+        }
+      }
+
+      async function batchCompleteInterviewMembers() {
+        const selected = getSelectedInterviewMembers();
+
+        if (selected.length === 0) {
+          showToast("請先勾選面試完成的人員", "error");
+          return;
+        }
+
+        try {
+          const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "batchUpdateInterviewStatus",
+              uuids: selected.map((member) => member.uuid),
+              interviewStatus: "已完成",
+              operator: currentUser.name || "",
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!result.success) {
+            showToast(result.message || "批次完成失敗", "error");
+            return;
+          }
+
+          const finishTime = result.finishTime || new Date();
+
+          currentInterviewMembers.forEach((member) => {
+            if (selected.some((item) => item.uuid === member.uuid)) {
+              member.interviewStatus = "已完成";
+              member.finishTime = finishTime;
+              member.currentCalling = "";
+            }
+          });
+
+          selectedInterviewUuids.clear();
+          filterInterviewMembers();
+          showToast(`已完成 ${selected.length} 人面試`, "success");
+        } catch (err) {
+          console.error(err);
+          showToast("批次完成失敗，請確認網路", "error");
+        }
+      }
+
+      function renderAdminSettings() {
+        const container = document.getElementById("adminSettingsPanel");
+        const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
+        if (!container) return;
+
+        container.innerHTML = `
+          <div class="admin-settings-card">
+            <div class="admin-settings-title">目前登入</div>
+            <div class="admin-settings-row">
+              <span>姓名</span>
+              <strong>${escapeHtml(currentUser.name || "-")}</strong>
+            </div>
+            <div class="admin-settings-row">
+              <span>角色</span>
+              <strong>${escapeHtml(currentUser.role || "-")}</strong>
+            </div>
+            <div class="admin-settings-row">
+              <span>帳號</span>
+              <strong>${escapeHtml(currentUser.account || "-")}</strong>
+            </div>
+          </div>
+
+          <div class="admin-settings-card">
+            <div class="admin-settings-title">資料表狀態</div>
+            <div class="admin-settings-row">
+              <span>活動主表</span>
+              <strong>已串接</strong>
+            </div>
+            <div class="admin-settings-row">
+              <span>活動人員資料</span>
+              <strong>已串接</strong>
+            </div>
+            <div class="admin-settings-row">
+              <span>報到紀錄</span>
+              <strong>需部署 Apps Script action</strong>
+            </div>
+          </div>
+
+          <div class="admin-settings-card">
+            <div class="admin-settings-title">管理提醒</div>
+            <div class="admin-settings-note">
+              目前前端已支援活動管理、報到開關、報到紀錄查詢與現場報到同步。
+              若要新增帳號管理、刪除活動或匯入名單，需要 Apps Script 增加對應 action。
+            </div>
+          </div>
+        `;
       }
 
       /* =========================
-Open Edit Modal
-========================= */
+      Open Edit Modal
+      ========================= */
       function convertTimeFormat(timeStr) {
         if (!timeStr) return "";
 
@@ -1566,6 +2745,8 @@ Open Edit Modal
 
         document.getElementById("editType").value = activity.type;
 
+        document.getElementById("editStatus").value = activity.status || "草稿";
+
         document.getElementById("editDate").value = activity.date.replaceAll(
           "/",
           "-",
@@ -1587,8 +2768,8 @@ Open Edit Modal
       }
 
       /* =========================
-Toggle Checkin
-========================= */
+      Toggle Checkin
+      ========================= */
 
       async function toggleCheckin(uuid, isOpen) {
         try {
@@ -1611,7 +2792,14 @@ Toggle Checkin
           const result = await response.json();
 
           if (result.success) {
-            console.log("報到狀態更新成功");
+            const activity = activitiesCache.find((item) => item.uuid === uuid);
+
+            if (activity) {
+              activity.checkinOpen = isOpen;
+            }
+
+            filterAdminActivities();
+            showToast(isOpen ? "已開放報到" : "已關閉報到", "success");
           } else {
             alert(result.message);
           }
@@ -1623,27 +2811,27 @@ Toggle Checkin
       }
 
       /* =========================
-load Checkin
-========================= */
+      load Checkin
+      ========================= */
 
       async function loadCheckinActivities() {
         const container = document.getElementById("checkinActivitiesContainer");
 
         container.innerHTML = `
 
-  <div class="loading-wrapper">
+        <div class="loading-wrapper">
 
-    <div class="loading-spinner"></div>
+          <div class="loading-spinner"></div>
 
-    <div class="loading-text">
+          <div class="loading-text">
 
-      載入活動中...
+            載入活動中...
 
-    </div>
+          </div>
 
-  </div>
+        </div>
 
-`;
+      `;
 
         try {
           const response = await fetch(API_URL, {
@@ -1675,13 +2863,13 @@ load Checkin
           if (openActivities.length === 0) {
             container.innerHTML = `
 
-                <div class="empty-state">
+                      <div class="empty-state">
 
-                    目前尚無開放報到活動
+                          目前尚無開放報到活動
 
-                </div>
+                      </div>
 
-            `;
+                  `;
 
             return;
           }
@@ -1692,104 +2880,104 @@ load Checkin
             .map(
               (activity) => `
 
-<div class="checkin-card">
+      <div class="checkin-card">
 
-    <!-- Header -->
+          <!-- Header -->
 
-    <div class="checkin-card-header">
+          <div class="checkin-card-header">
 
-        <div>
+              <div>
 
-            <div class="checkin-title">
+                  <div class="checkin-title">
 
-                ${activity.name}
+                      ${activity.name}
 
-            </div>
+                  </div>
 
-            <div class="checkin-date">
+                  <div class="checkin-date">
 
-                活動日期：${activity.date}
+                      活動日期：${activity.date}
 
-            </div>
+                  </div>
 
-        </div>
+              </div>
 
-        <div class="checkin-badge">
+              <div class="checkin-badge">
 
-            開放中
+                  開放中
 
-        </div>
+              </div>
 
-    </div>
+          </div>
 
-    <!-- Content -->
+          <!-- Content -->
 
-    <div class="checkin-info">
+          <div class="checkin-info">
 
-        <div class="checkin-info-item">
+              <div class="checkin-info-item">
 
-            <span class="info-label">
+                  <span class="info-label">
 
-                活動地點
+                      活動地點
 
-            </span>
+                  </span>
 
-            <span class="info-value">
+                  <span class="info-value">
 
-                ${activity.location}
+                      ${activity.location}
 
-            </span>
+                  </span>
 
-        </div>
+              </div>
 
-        <div class="checkin-info-item">
+              <div class="checkin-info-item">
 
-            <span class="info-label">
+                  <span class="info-label">
 
-                活動日期與時間
+                      活動日期與時間
 
-            </span>
+                  </span>
 
-            <span class="info-value">
+                  <span class="info-value">
 
-                ${formatDate(activity.date)}
-｜
-${formatTime(activity.startTime)}
--
-${formatTime(activity.endTime)}
+                      ${formatDate(activity.date)}
+      ｜
+      ${formatTime(activity.startTime)}
+      -
+      ${formatTime(activity.endTime)}
 
-            </span>
+                  </span>
 
-        </div>
+              </div>
 
-    </div>
+          </div>
 
-    <!-- Footer -->
+          <!-- Footer -->
 
-    <div class="checkin-card-footer">
+          <div class="checkin-card-footer">
 
-        <button
-            class="
-              btn
-              btn-primary
-              checkin-enter-btn
-            "
+              <button
+                  class="
+                    btn
+                    btn-primary
+                    checkin-enter-btn
+                  "
 
-            onclick="
-              enterCheckin(
-                '${activity.uuid}'
-              )
-            ">
+                  onclick="
+                    enterCheckin(
+                      '${activity.uuid}'
+                    )
+                  ">
 
-            進入報到
+                  進入報到
 
-        </button>
+              </button>
 
-    </div>
+          </div>
 
-</div>
+      </div>
 
-`,
+      `,
             )
             .join("");
         } catch (err) {
@@ -1800,10 +2988,12 @@ ${formatTime(activity.endTime)}
       }
 
       /* =========================
-Enter Checkin
-========================= */
+      Enter Checkin
+      ========================= */
 
       async function enterCheckin(activityUUID) {
+        resetCheckinFilters();
+
         // 切換頁面
 
         document.querySelectorAll("#systemContent > div").forEach((page) => {
@@ -1828,27 +3018,27 @@ Enter Checkin
             (item) => item.uuid === activityUUID,
           );
 
-          currentActivityCode = activity.code;
-
           // 無活動
 
           if (!activity) {
-            alert("找不到活動");
+            showToast("找不到活動，請重新整理活動列表", "error");
 
             return;
           }
+
+          currentActivityCode = activity.code;
 
           // title
 
           document.getElementById("checkinRoomTitle").innerHTML = `
 
-            活動名稱：${activity.name}
+                  活動名稱：${activity.name}
 
-            ｜
+                  ｜
 
-            活動日期：${activity.date}
+                  活動日期：${activity.date}
 
-        `;
+              `;
 
           // 讀取考生資料
 
@@ -1879,41 +3069,48 @@ Enter Checkin
           // 搜尋 cache
           filteredCheckinMembers = members;
 
+          // 填充篩選選項
+          populateLocationFilter(members);
+          populateStatusFilters(members);
+
           currentCheckinPage = 1;
 
           // 無資料
 
           if (members.length === 0) {
+            renderCheckinSummary();
             document.getElementById("checkinTableBody").innerHTML = `
 
-                <tr>
+                      <tr>
 
-                    <td colspan="15">
+                          <td colspan="15">
 
-                        尚無報到資料
+                              尚無報到資料
 
-                    </td>
+                          </td>
 
-                </tr>
+                      </tr>
 
-            `;
+                  `;
 
             return;
           }
 
           // render
 
+          applyCheckinFilters(false);
           renderCheckinTable();
+          startCheckinRealtimeSync();
         } catch (err) {
           console.error(err);
 
-          alert("載入失敗");
+          showToast("載入失敗，請確認網路或稍後再試", "error");
         }
       }
 
       /* =========================
-Reload Current Checkin Data
-========================= */
+      Reload Current Checkin Data
+      ========================= */
 
       async function reloadCurrentCheckinData() {
         const btn = document.querySelector(".btn-refresh-modern");
@@ -1925,7 +3122,31 @@ Reload Current Checkin Data
 
           showToast("正在同步最新名單...", "success");
 
-          renderCheckinLoading();
+          btn.classList.add("is-loading");
+
+          await syncCurrentCheckinData({ silent: false });
+
+          showToast("名單已更新", "success");
+        } catch (err) {
+          console.error(err);
+
+          showToast("更新失敗，已保留目前畫面", "error");
+        } finally {
+          btn.disabled = false;
+          btn.classList.remove("is-loading");
+
+          btn.innerHTML = "<span>↻</span> 重新整理名單";
+        }
+      }
+
+      async function syncCurrentCheckinData({ silent = true } = {}) {
+        if (!currentActivityCode || checkinRealtimeSyncing) return;
+        if (checkinProcessingUuids.size > 0) return;
+
+        checkinRealtimeSyncing = true;
+
+        try {
+          const filters = getCheckinFilters();
 
           const response = await fetch(API_URL, {
             method: "POST",
@@ -1945,32 +3166,45 @@ Reload Current Checkin Data
 
           currentCheckinMembers = result.data || [];
 
-          filteredCheckinMembers = currentCheckinMembers;
-
-          currentCheckinPage = 1;
-
+          populateLocationFilter(currentCheckinMembers);
+          populateStatusFilters(currentCheckinMembers);
+          setCheckinFilters(filters);
+          applyCheckinFilters(false);
           renderCheckinTable();
-
-          showToast("名單已更新", "success");
         } catch (err) {
           console.error(err);
 
-          showToast("更新失敗", "error");
+          if (!silent) {
+            throw err;
+          }
         } finally {
-          btn.disabled = false;
-
-          btn.innerHTML = "<span>↻</span> 重新整理名單";
+          checkinRealtimeSyncing = false;
         }
       }
 
+      function startCheckinRealtimeSync() {
+        stopCheckinRealtimeSync();
+
+        checkinRealtimeTimer = setInterval(() => {
+          syncCurrentCheckinData({ silent: true });
+        }, 3000);
+      }
+
+      function stopCheckinRealtimeSync() {
+        if (!checkinRealtimeTimer) return;
+
+        clearInterval(checkinRealtimeTimer);
+        checkinRealtimeTimer = null;
+      }
+
       /* =========================
-Render Checkin Table
-========================= */
+      Render Checkin Table
+      ========================= */
 
       function renderCheckinTable() {
         const tbody = document.getElementById("checkinTableBody");
 
-        // 分頁
+        renderCheckinSummary();
 
         const start = (currentCheckinPage - 1) * CHECKIN_PAGE_SIZE;
 
@@ -1978,175 +3212,255 @@ Render Checkin Table
 
         const pageMembers = filteredCheckinMembers.slice(start, end);
 
-        // render
+        if (pageMembers.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="14" class="empty-cell">查無符合條件的報到資料</td>
+            </tr>
+          `;
+          renderPagination();
+          return;
+        }
+
+        let previousLocation = "";
+        const firstActionableUuid = getFirstActionableMemberUuid();
 
         tbody.innerHTML = pageMembers
-          .map(
-            (member) => `
+          .map((member) => {
+            const location = member.location || "未設定地點";
+            const showLocationHeader = location !== previousLocation;
+            previousLocation = location;
 
-        <tr>
+            return `
+              ${
+                showLocationHeader
+                  ? `
+                    <tr class="checkin-location-row">
+                      <td colspan="14">${escapeHtml(location)}</td>
+                    </tr>
+                  `
+                  : ""
+              }
 
-            <td>
-                ${member.name}
-            </td>
+              <tr class="${getCheckinRowClass(member, firstActionableUuid)}">
 
-            <td>
-                ${member.idNumber}
-            </td>
+                  <td>
+                      ${escapeHtml(member.name || "-")}
+                  </td>
 
-            <td>
-                ${member.activityNumber}
-            </td>
+                  <td>
+                      ${escapeHtml(member.idNumber || "-")}
+                  </td>
 
-            <td>
-                ${member.location}
-            </td>
+                  <td>
+                      ${escapeHtml(member.activityNumber || "-")}
+                  </td>
 
-            <td>
-                ${formatDate(member.date)}
-            </td>
+                  <td>
+                      ${escapeHtml(member.location || "-")}
+                  </td>
 
-            <td>
-                ${formatTime(member.checkinStartTime)}
-            </td>
+                  <td>
+                      ${escapeHtml(formatDate(member.date))}
+                  </td>
 
-            <td>
-                ${formatTime(member.checkinEndTime)}
-            </td>
-            <td>
+                  <td>
+                      ${escapeHtml(formatTime(member.checkinStartTime))}
+                  </td>
 
-    <span class="
-        status-badge
-        ${getCheckinStatusClass(member.checkinStatus)}
-    ">
+                  <td>
+                      ${escapeHtml(formatTime(member.checkinEndTime))}
+                  </td>
+                  <td>
 
-        ${member.checkinStatus}
-
-    </span>
-
-</td>
-
-<td>
-
-    <span class="
-        status-badge
-        ${getInterviewStatusClass(member.interviewStatus)}
-    ">
-
-        ${member.interviewStatus}
-
-    </span>
-
-</td>
-
-
-
-            <td>
-                ${member.currentCalling ? "叫號中" : "-"}
-            </td>
-
-            <td>
-    ${
-      member.absent
-        ? `
-            <span class="
-                status-badge
-                status-danger-light
-            ">
-                缺考
-            </span>
-            `
-        : "-"
-    }
-</td>
-
-<td>
-    ${member.checkinTime ? formatDateTime(member.checkinTime) : "-"}
-</td>
-
-<td>
-    ${
-      member.note
-        ? `
-            <span class="
-                status-badge
-                status-warning
-            ">
-                ${member.note}
-            </span>
-            `
-        : "-"
-    }
-</td>
-
-            <td>
-
-    ${
-      member.checkinStatus === "已報到"
-        ? `
-
-        <button
-
-          class="
-            btn
-            btn-danger
-            btn-sm
-          "
-
-          onclick="
-            cancelCheckin(
-              '${member.uuid}'
-            )
+          <span class="
+              status-badge
+              ${getCheckinStatusClass(member.checkinStatus)}
           ">
 
-          取消報到
+              ${escapeHtml(member.checkinStatus || "-")}
 
-        </button>
+          </span>
 
-        `
-        : `
+      </td>
 
-        <button
+      <td>
 
-          class="
-            btn
-            btn-success
-            btn-sm
-          "
-
-          onclick="
-            checkinMember(
-              '${member.uuid}'
-            )
+          <span class="
+              status-badge
+              ${getInterviewStatusClass(member.interviewStatus)}
           ">
 
-          報到
+              ${escapeHtml(member.interviewStatus || "-")}
 
-        </button>
+          </span>
 
-        `
-    }
+      </td>
 
-</td>
 
-        </tr>
 
-    `,
-          )
+                  <td>
+                      ${member.currentCalling ? "叫號中" : "-"}
+                  </td>
+
+                  <td>
+          ${
+            isAbsentRecord(member)
+              ? `
+                  <span class="
+                      status-badge
+                      status-danger-light
+                  ">
+                      缺考
+                  </span>
+                  `
+              : "-"
+          }
+      </td>
+
+      <td>
+          ${member.checkinTime ? escapeHtml(formatDateTime(member.checkinTime)) : "-"}
+      </td>
+
+      <td>
+          ${
+            member.note
+              ? `
+                  <span class="
+                      status-badge
+                      status-warning
+                  ">
+                      ${escapeHtml(member.note)}
+                  </span>
+                  `
+              : "-"
+          }
+      </td>
+
+                  <td>
+
+          ${
+            isCheckedInRecord(member)
+              ? `
+
+              <button
+
+                class="
+                  btn
+                  btn-danger
+                  btn-sm
+                "
+
+                onclick="
+                  cancelCheckin(
+                    '${member.uuid}',
+                    this
+                  )
+                ">
+
+                取消報到
+
+              </button>
+
+              `
+              : `
+
+              <button
+
+                class="
+                  btn
+                  btn-success
+                  btn-sm
+                "
+
+                onclick="
+                  checkinMember(
+                    '${member.uuid}',
+                    this
+                  )
+                ">
+
+                報到
+
+              </button>
+
+              `
+          }
+
+      </td>
+
+              </tr>
+
+          `;
+          })
           .join("");
 
         renderPagination();
       }
 
-      /* =========================
-Pagination
-========================= */
+      function getCheckinRowClass(member, firstActionableUuid) {
+        const classes = [];
 
-      function renderPagination() {
+        if (isCheckedInRecord(member)) classes.push("checkin-row-done");
+        if (isAbsentRecord(member)) classes.push("checkin-row-absent");
+        if (member.uuid === firstActionableUuid) classes.push("checkin-row-active");
+
+        return classes.join(" ");
+      }
+
+      function getFirstActionableMemberUuid() {
+        const first = filteredCheckinMembers.find(
+          (member) => !isCheckedInRecord(member) && !isAbsentRecord(member),
+        );
+
+        return first?.uuid || "";
+      }
+
+      function renderCheckinSummary() {
+        const total = currentCheckinMembers.length;
+        const checked = currentCheckinMembers.filter(isCheckedInRecord).length;
+        const absent = currentCheckinMembers.filter(isAbsentRecord).length;
+        const interviewDone = currentCheckinMembers.filter(
+          isInterviewCompletedRecord,
+        ).length;
+        const unchecked = currentCheckinMembers.filter(
+          (member) => !isCheckedInRecord(member) && !isAbsentRecord(member),
+        ).length;
+
+        document.getElementById("checkinSummary").innerHTML = `
+          <div class="checkin-summary-card">
+            <span>總人數</span>
+            <strong>${total}</strong>
+          </div>
+          <div class="checkin-summary-card success">
+            <span>已報到</span>
+            <strong>${checked}</strong>
+          </div>
+          <div class="checkin-summary-card warning">
+            <span>未報到</span>
+            <strong>${unchecked}</strong>
+          </div>
+          <div class="checkin-summary-card danger">
+            <span>缺考</span>
+            <strong>${absent}</strong>
+          </div>
+          <div class="checkin-summary-card primary">
+            <span>面試完成</span>
+            <strong>${interviewDone}</strong>
+          </div>
+        `;
+      }
+
+      /* =========================
+      Pagination
+      ========================= */
+
+function renderPagination() {
         const container = document.getElementById("paginationContainer");
 
-        const totalPages = Math.ceil(
-          filteredCheckinMembers.length / CHECKIN_PAGE_SIZE,
+        const totalPages = Math.max(
+          1,
+          Math.ceil(filteredCheckinMembers.length / CHECKIN_PAGE_SIZE),
         );
 
         let html = "";
@@ -2155,78 +3469,75 @@ Pagination
 
         html += `
 
-        <button
-          class="page-btn"
+              <button
+                class="page-btn"
 
-          onclick="
-            changePage(
-              ${currentCheckinPage - 1}
-            )
-          "
+                onclick="
+                  changePage(
+                    ${currentCheckinPage - 1}
+                  )
+                "
 
-          ${currentCheckinPage === 1 ? "disabled" : ""}>
+                ${currentCheckinPage === 1 ? "disabled" : ""}>
 
-          上一頁
+                上一頁
 
-        </button>
+              </button>
 
-    `;
+          `;
 
-        // Pages
+        // Page input and total
 
-        for (let i = 1; i <= totalPages; i++) {
-          html += `
+        html += `
 
-            <button
+              <div class="page-info">
+                <span>第</span>
+                <input
+                  type="number"
+                  class="page-input"
+                  id="pageInput"
+                  min="1"
+                  max="${totalPages}"
+                  value="${currentCheckinPage}"
+                  onchange="gotoPage(this.value)"
+                >
+                <span>頁，共 ${totalPages} 頁</span>
+              </div>
 
-              class="
-                page-btn
-
-                ${i === currentCheckinPage ? "active" : ""}
-              "
-
-              onclick="
-                changePage(${i})
-              ">
-
-              ${i}
-
-            </button>
-
-        `;
-        }
+          `;
 
         // Next
 
         html += `
 
-        <button
-          class="page-btn"
+              <button
+                class="page-btn"
 
-          onclick="
-            changePage(
-              ${currentCheckinPage + 1}
-            )
-          "
+                onclick="
+                  changePage(
+                    ${currentCheckinPage + 1}
+                  )
+                "
 
-          ${currentCheckinPage === totalPages ? "disabled" : ""}>
+                ${currentCheckinPage === totalPages ? "disabled" : ""}>
 
-          下一頁
+                下一頁
 
-        </button>
+              </button>
 
-    `;
+          `;
 
         container.innerHTML = html;
       }
 
       /* =========================
-Change Page
-========================= */
+      Change Page
+      ========================= */
 
       function changePage(page) {
-        const totalPages = Math.ceil(
-          filteredCheckinMembers.length / CHECKIN_PAGE_SIZE,
+        const totalPages = Math.max(
+          1,
+          Math.ceil(filteredCheckinMembers.length / CHECKIN_PAGE_SIZE),
         );
 
         if (page < 1) return;
@@ -2239,32 +3550,55 @@ Change Page
       }
 
       /* =========================
-Checkin Member
-========================= */
+      Go to Page
+      ========================= */
 
-      async function checkinMember(uuid) {
+      function gotoPage(page) {
+        const pageNum = parseInt(page);
+        const totalPages = Math.max(
+          1,
+          Math.ceil(filteredCheckinMembers.length / CHECKIN_PAGE_SIZE),
+        );
+
+        if (isNaN(pageNum) || pageNum < 1 || pageNum > totalPages) {
+          // Reset to current page if invalid
+          document.getElementById("pageInput").value = currentCheckinPage;
+          return;
+        }
+
+        changePage(pageNum);
+      }
+
+      /* =========================
+      Checkin Member
+      ========================= */
+
+      async function checkinMember(uuid, btn = null) {
         // 確認
 
         const confirmCheckin = confirm("確認完成報到？");
 
         if (!confirmCheckin) return;
 
+        if (checkinProcessingUuids.has(uuid)) return;
+
         try {
+          checkinProcessingUuids.add(uuid);
+
           const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
           /* =========================
-           Loading
-        ========================= */
+                 Loading
+              ========================= */
 
-          const btn = event.target;
-
-          btn.disabled = true;
-
-          btn.innerHTML = "處理中...";
+          if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = "處理中...";
+          }
 
           /* =========================
-           API
-        ========================= */
+                 API
+              ========================= */
 
           const response = await fetch(API_URL, {
             method: "POST",
@@ -2285,8 +3619,8 @@ Checkin Member
           const result = await response.json();
 
           /* =========================
-           Success
-        ========================= */
+                 Success
+              ========================= */
 
           if (result.success) {
             const member = currentCheckinMembers.find(
@@ -2319,26 +3653,29 @@ Checkin Member
               member.absent = "";
             }
 
-            /* =========================
-               即時更新畫面
-            ========================= */
+            await writeCheckinLog("報到", member, currentUser.name);
 
+            /* =========================
+                     即時更新畫面
+                  ========================= */
+
+            applyCheckinFilters(false);
             renderCheckinTable();
 
             /* =========================
-               Toast
-            ========================= */
+                     Toast
+                  ========================= */
 
             showToast(
               `報到成功
-                (${member.name})`,
+                      (${member?.name || "已更新"})`,
 
               "success",
             );
           } else {
             /* =========================
-           Fail
-        ========================= */
+                 Fail
+              ========================= */
             showToast(
               result.message || "報到失敗",
 
@@ -2348,35 +3685,47 @@ Checkin Member
         } catch (err) {
           console.error(err);
 
-          showToast("系統連線失敗", "error");
+          showToast("系統連線失敗，請確認網路後再試", "error");
+        } finally {
+          checkinProcessingUuids.delete(uuid);
+          if (btn && document.body.contains(btn)) {
+            btn.disabled = false;
+            btn.innerHTML = "報到";
+          }
         }
       }
 
       /* =========================
-Cancel Checkin
-========================= */
+      Cancel Checkin
+      ========================= */
 
-      async function cancelCheckin(uuid) {
-        const confirmCancel = confirm("確認取消報到？");
+      async function cancelCheckin(uuid, btn = null) {
+        const member = currentCheckinMembers.find((item) => item.uuid === uuid);
+        const confirmCancel = confirm(
+          `確認取消 ${member?.name || "此人員"} 的報到紀錄？`,
+        );
 
         if (!confirmCancel) return;
 
+        if (checkinProcessingUuids.has(uuid)) return;
+
         try {
+          checkinProcessingUuids.add(uuid);
+
           const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
           /* =========================
-           Loading
-        ========================= */
+                 Loading
+              ========================= */
 
-          const btn = event.target;
-
-          btn.disabled = true;
-
-          btn.innerHTML = "處理中...";
+          if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = "處理中...";
+          }
 
           /* =========================
-           API
-        ========================= */
+                 API
+              ========================= */
 
           const response = await fetch(API_URL, {
             method: "POST",
@@ -2397,8 +3746,8 @@ Cancel Checkin
           const result = await response.json();
 
           /* =========================
-           Success
-        ========================= */
+                 Success
+              ========================= */
 
           if (result.success) {
             const member = currentCheckinMembers.find(
@@ -2419,26 +3768,29 @@ Cancel Checkin
               member.interviewStatus = "未開始";
             }
 
-            /* =========================
-               即時更新畫面
-            ========================= */
+            await writeCheckinLog("取消報到", member, currentUser.name);
 
+            /* =========================
+                     即時更新畫面
+                  ========================= */
+
+            applyCheckinFilters(false);
             renderCheckinTable();
 
             /* =========================
-               Toast
-            ========================= */
+                     Toast
+                  ========================= */
 
             showToast(
               `已取消報到
-                (${member.name})`,
+                      (${member?.name || "已更新"})`,
 
               "success",
             );
           } else {
             /* =========================
-           Fail
-        ========================= */
+                 Fail
+              ========================= */
             showToast(
               result.message || "取消報到失敗",
 
@@ -2448,46 +3800,287 @@ Cancel Checkin
         } catch (err) {
           console.error(err);
 
-          showToast("系統連線失敗", "error");
+          showToast("系統連線失敗，請確認網路後再試", "error");
+        } finally {
+          checkinProcessingUuids.delete(uuid);
+          if (btn && document.body.contains(btn)) {
+            btn.disabled = false;
+            btn.innerHTML = "取消報到";
+          }
         }
       }
 
+      async function writeCheckinLog(actionType, member, operator) {
+        if (!member) return;
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+
+            body: JSON.stringify({
+              action: "writeCheckinLog",
+              record: buildCheckinLogRecord(actionType, member, operator),
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!result.success) {
+            console.warn("報到紀錄寫入失敗", result.message || result);
+            showToast("狀態已更新，但報到紀錄寫入失敗", "error");
+          }
+        } catch (err) {
+          console.error("報到紀錄寫入失敗", err);
+          showToast("狀態已更新，但報到紀錄寫入失敗", "error");
+        }
+      }
+
+      function buildCheckinLogRecord(actionType, member, operator) {
+        const activity = activitiesCache.find(
+          (item) =>
+            item.code === currentActivityCode ||
+            item.activityCode === currentActivityCode,
+        );
+
+        return {
+          紀錄時間: formatDateTime(new Date()),
+          操作類型: actionType,
+          活動代碼:
+            member.activityCode ||
+            member.activityNumber ||
+            activity?.code ||
+            currentActivityCode ||
+            "",
+          活動名稱: member.activityName || activity?.name || "",
+          活動日期: formatDate(member.date || activity?.date),
+          活動地點: member.location || activity?.location || "",
+          人員UUID: member.uuid || "",
+          姓名: member.name || "",
+          身分證字號: member.idNumber || "",
+          活動編號: member.activityNumber || "",
+          報到狀態: member.checkinStatus || "",
+          面試狀態: member.interviewStatus || "",
+          目前叫號: member.currentCalling ? "叫號中" : "",
+          缺考: member.absent || "",
+          報到時間: member.checkinTime ? formatDateTime(member.checkinTime) : "",
+          備註: member.note || "",
+          操作人員: operator || "",
+          資料來源: "web",
+        };
+      }
+
       /* =========================
-Filter Checkin
-========================= */
+      Filter Checkin
+      ========================= */
+
+      function populateLocationFilter(members) {
+        const locationFilter = document.getElementById("locationFilter");
+
+        // 清空現有選項（保留"全部地點"）
+        locationFilter.innerHTML = '<option value="">全部地點</option>';
+
+        // 收集所有唯一的地點
+        const locations = [
+          ...new Set(
+            members
+              .map((member) => member.location)
+              .filter((location) => location),
+          ),
+        ];
+
+        // 排序地點
+        locations.sort();
+
+        // 添加地點選項
+        locations.forEach((location) => {
+          const option = document.createElement("option");
+          option.value = location;
+          option.textContent = location;
+          locationFilter.appendChild(option);
+        });
+      }
+
+      function populateStatusFilters(members) {
+        const checkinStatusSelect = document.getElementById(
+          "checkinStatusFilter",
+        );
+        const interviewStatusSelect = document.getElementById(
+          "interviewStatusFilter",
+        );
+
+        checkinStatusSelect.innerHTML =
+          '<option value="">全部報到狀態</option>';
+        interviewStatusSelect.innerHTML =
+          '<option value="">全部面試狀態</option>';
+
+        const checkinStatuses = [
+          ...new Set(
+            members
+              .map((member) => member.checkinStatus)
+              .filter((status) => status),
+          ),
+        ];
+        const interviewStatuses = [
+          ...new Set(
+            members
+              .map((member) => member.interviewStatus)
+              .filter((status) => status),
+          ),
+        ];
+
+        checkinStatuses.sort();
+        interviewStatuses.sort();
+
+        checkinStatuses.forEach((status) => {
+          const option = document.createElement("option");
+          option.value = status;
+          option.textContent = status;
+          checkinStatusSelect.appendChild(option);
+        });
+
+        interviewStatuses.forEach((status) => {
+          const option = document.createElement("option");
+          option.value = status;
+          option.textContent = status;
+          interviewStatusSelect.appendChild(option);
+        });
+      }
+
+      function getCheckinFilters() {
+        return {
+          keyword: document.getElementById("checkinSearch").value,
+          location: document.getElementById("locationFilter").value,
+          checkinStatus: document.getElementById("checkinStatusFilter").value,
+          interviewStatus: document.getElementById("interviewStatusFilter").value,
+        };
+      }
+
+      function setCheckinFilters(filters) {
+        document.getElementById("checkinSearch").value = filters.keyword || "";
+        document.getElementById("locationFilter").value = filters.location || "";
+        document.getElementById("checkinStatusFilter").value =
+          filters.checkinStatus || "";
+        document.getElementById("interviewStatusFilter").value =
+          filters.interviewStatus || "";
+      }
+
+      function resetCheckinFilters() {
+        setCheckinFilters({
+          keyword: "",
+          location: "",
+          checkinStatus: "",
+          interviewStatus: "",
+        });
+      }
+
+      /* =========================
+      Filter Checkin
+      ========================= */
 
       function filterCheckinList() {
-        const keyword = document
-          .getElementById("checkinSearch")
-          .value.trim()
-          .toLowerCase();
-
-        // 無關鍵字
-
-        if (keyword === "") {
-          filteredCheckinMembers = currentCheckinMembers;
-        }
-        // 搜尋
-        else {
-          filteredCheckinMembers = currentCheckinMembers.filter(
-            (member) =>
-              (member.name || "").toLowerCase().includes(keyword) ||
-              (member.idNumber || "").toLowerCase().includes(keyword),
-          );
-        }
-
-        // 回第一頁
-
-        currentCheckinPage = 1;
-
-        // render
-
+        applyCheckinFilters(true);
         renderCheckinTable();
       }
 
+      function applyCheckinFilters(resetPage = true) {
+        const keyword = document.getElementById("checkinSearch").value.trim().toLowerCase();
+
+        const locationFilter = document
+          .getElementById("locationFilter")
+          .value.trim();
+
+        const checkinStatus = document
+          .getElementById("checkinStatusFilter")
+          .value.trim();
+
+        const interviewStatus = document
+          .getElementById("interviewStatusFilter")
+          .value.trim();
+
+        // 先隱藏面試已完成，再根據地點、報到、面試狀態篩選
+        let filtered = currentCheckinMembers.filter(
+          (member) => !shouldHideFromCheckinTable(member),
+        );
+
+        if (locationFilter !== "") {
+          filtered = filtered.filter(
+            (member) => member.location === locationFilter,
+          );
+        }
+
+        if (checkinStatus !== "") {
+          filtered = filtered.filter(
+            (member) => member.checkinStatus === checkinStatus,
+          );
+        }
+
+        if (interviewStatus !== "") {
+          filtered = filtered.filter(
+            (member) => member.interviewStatus === interviewStatus,
+          );
+        }
+
+        // 再根據關鍵字篩選
+        if (keyword !== "") {
+          filtered = filtered.filter(
+            (member) =>
+              (member.name || "").toLowerCase().includes(keyword) ||
+              (member.idNumber || "").toLowerCase().includes(keyword) ||
+              (member.activityNumber || "").toLowerCase().includes(keyword),
+          );
+        }
+
+        filteredCheckinMembers = sortCheckinMembers(filtered);
+
+        if (resetPage) {
+          currentCheckinPage = 1;
+        }
+      }
+
+      function sortCheckinMembers(members) {
+        return [...members].sort((a, b) => {
+          const locationCompare = String(a.location || "").localeCompare(
+            String(b.location || ""),
+            "zh-Hant",
+          );
+
+          if (locationCompare !== 0) return locationCompare;
+
+          const aDone = isCheckedInRecord(a) || isAbsentRecord(a);
+          const bDone = isCheckedInRecord(b) || isAbsentRecord(b);
+
+          if (aDone !== bDone) return aDone ? 1 : -1;
+
+          return String(a.activityNumber || "").localeCompare(
+            String(b.activityNumber || ""),
+            "zh-Hant",
+            { numeric: true },
+          );
+        });
+      }
+
+      function handleCheckinSearchKeydown(event) {
+        if (event.key !== "Enter") return;
+
+        const first = filteredCheckinMembers.find(
+          (member) => !isCheckedInRecord(member) && !isAbsentRecord(member),
+        );
+
+        if (!first) {
+          showToast("目前篩選結果沒有可報到人員", "error");
+          return;
+        }
+
+        checkinMember(first.uuid);
+      }
+
       /* =========================
-Format DateTime
-========================= */
+      Format DateTime
+      ========================= */
 
       function formatDateTime(datetime) {
         if (!datetime) return "-";
@@ -2512,8 +4105,8 @@ Format DateTime
       }
 
       /* =========================
-前端時間解析
-========================= */
+      前端時間解析
+      ========================= */
 
       function parseFrontDateTime(dateStr, timeStr) {
         if (!timeStr) return new Date();
@@ -2542,8 +4135,8 @@ Format DateTime
       }
 
       /* =========================
-Checkin Status Class
-========================= */
+      Checkin Status Class
+      ========================= */
 
       function getCheckinStatusClass(status) {
         switch (status) {
@@ -2565,27 +4158,27 @@ Checkin Status Class
       }
 
       /* =========================
-Absent Badge
-========================= */
+      Absent Badge
+      ========================= */
 
       function getAbsentBadge(absent) {
         if (absent === "缺考") {
           return `
-        
-            <span class="status-badge status-absent">
 
-                缺考
+                  <span class="status-badge status-absent">
 
-            </span>
+                      缺考
 
-        `;
+                  </span>
+
+              `;
         }
 
         return "-";
       }
       /* =========================
-Interview Status Class
-========================= */
+      Interview Status Class
+      ========================= */
 
       function getInterviewStatusClass(status) {
         switch (status) {
@@ -2604,87 +4197,89 @@ Interview Status Class
       }
 
       /* =========================
-Render Loading Table
-========================= */
+      Render Loading Table
+      ========================= */
 
       function renderCheckinLoading() {
         document.getElementById("checkinTableBody").innerHTML = `
 
-        ${Array(6)
-          .fill(
-            `
-    <tr class="skeleton-row">
+              ${Array(6)
+                .fill(
+                  `
+          <tr class="skeleton-row">
 
-        <td>
-            <div class="skeleton-box w-40"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-40"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-80"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-80"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-50"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-50"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-70"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-70"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-60"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-60"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-50"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-50"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-50"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-50"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-60"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-60"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-50"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-50"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-40"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-40"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-50"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-50"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-60"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-60"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-50"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-50"></div>
+              </td>
 
-        <td>
-            <div class="skeleton-box w-40"></div>
-        </td>
+              <td>
+                  <div class="skeleton-box w-40"></div>
+              </td>
 
-    </tr>
-    `,
-          )
-          .join("")}
+          </tr>
+          `,
+                )
+                .join("")}
 
-    `;
+          `;
       }
 
       /* =========================
-Load Checkin Logs
-========================= */
+      Load Checkin Logs
+      ========================= */
 
       async function loadCheckinLogs() {
         try {
+          const filters = getRecordFilters();
+
           renderLogsLoading();
 
           const response = await fetch(API_URL, {
@@ -2703,9 +4298,11 @@ Load Checkin Logs
 
           const data = result.data || [];
 
-          renderCheckinLogs(data);
+          checkinRecordsCache = data;
 
-          updateLogSummary(data);
+          populateRecordFilters(data);
+          setRecordFilters(filters);
+          filterCheckinRecords();
         } catch (err) {
           console.error(err);
 
@@ -2714,111 +4311,363 @@ Load Checkin Logs
       }
 
       /* =========================
-Render Checkin Logs
-========================= */
+      Render Checkin Logs
+      ========================= */
 
       function renderCheckinLogs(data) {
-        const tbody = document.getElementById("checkinLogsTable");
+        const tbody = document.getElementById("checkinRecordsTable");
 
         if (data.length === 0) {
           tbody.innerHTML = `
-      <tr>
-        <td colspan="9">
-          尚無報到紀錄
-        </td>
-      </tr>
-    `;
+            <tr>
+              <td colspan="9" class="empty-cell">
+                尚無報到紀錄
+              </td>
+            </tr>
+          `;
 
           return;
         }
 
+        let previousGroup = "";
+
         tbody.innerHTML = data
-          .map(
-            (item) => `
+          .map((item) => {
+            const groupKey = getRecordGroupKey(item);
+            const showGroupHeader = groupKey !== previousGroup;
+            previousGroup = groupKey;
 
-    <tr>
+            return `
 
-      <td>${item.name || "-"}</td>
+          ${
+            showGroupHeader
+              ? `
+                <tr class="record-group-row">
+                  <td colspan="9">
+                    ${escapeHtml(getRecordGroupLabel(item))}
+                  </td>
+                </tr>
+              `
+              : ""
+          }
 
-      <td>${item.idNumber || "-"}</td>
+          <tr>
 
-      <td>${item.activityCode || "-"}</td>
+            <td>${escapeHtml(getLogValue(item, "name", "姓名") || "-")}</td>
 
-      <td>${item.date || "-"}</td>
+            <td>${escapeHtml(getLogValue(item, "idNumber", "identityNumber", "身分證字號") || "-")}</td>
 
-      <td>
-        ${renderStatusBadge(item.checkinStatus)}
-      </td>
+            <td>${escapeHtml(item.activityCode || item.activityNumber || item.code || "-")}</td>
 
-      <td>
-        ${renderInterviewBadge(item.interviewStatus)}
-      </td>
+            <td>${escapeHtml(formatRecordDate(getLogValue(item, "date", "activityDate", "活動日期")))}</td>
 
-      <td>${item.checkinTime || "-"}</td>
+            <td>
+              ${renderStatusBadge(getRecordStatus(item))}
+            </td>
 
-      <td>${item.note || "-"}</td>
+            <td>
+              ${renderInterviewBadge(getLogValue(item, "interviewStatus", "面試狀態"))}
+            </td>
 
-      <td>${item.operator || "-"}</td>
+            <td>${escapeHtml(formatRecordDateTime(getLogValue(item, "checkinTime", "報到時間")))}</td>
 
-    </tr>
+            <td>${escapeHtml(getLogValue(item, "note", "備註") || "-")}</td>
 
-  `,
-          )
+            <td>${escapeHtml(getLogValue(item, "operator", "checkinOperator", "操作人員") || "-")}</td>
+
+          </tr>
+
+        `;
+          })
           .join("");
       }
 
+      function getRecordGroupKey(item) {
+        return `${getRecordActivityCode(item)}|${getLogValue(
+          item,
+          "activityName",
+          "活動名稱",
+        )}`;
+      }
+
+      function getRecordGroupLabel(item) {
+        const code = getRecordActivityCode(item) || "未設定活動代碼";
+        const name = getLogValue(item, "activityName", "活動名稱") || "未設定活動名稱";
+
+        return `${code}｜${name}`;
+      }
+
       /* =========================
-Update Summary
-========================= */
+      Update Summary
+      ========================= */
 
       function updateLogSummary(data) {
-        const total = data.filter((x) => x.checkinStatus === "已報到").length;
+        const count = data.length;
 
-        const late = data.filter((x) => x.note === "遲到報到").length;
+        const total = data.filter(
+          (x) =>
+            getLogValue(x, "checkinTime", "報到時間") ||
+            getRecordStatus(x) === "已報到" ||
+            getRecordStatus(x) === "遲到報到" ||
+            getRecordStatus(x) === "報到",
+        ).length;
 
-        const absent = data.filter((x) => x.absent === "缺考").length;
+        const late = data.filter(
+          (x) =>
+            getLogValue(x, "note", "備註") === "遲到報到" ||
+            getRecordStatus(x) === "遲到報到",
+        ).length;
 
-        document.getElementById("totalCheckinCount").innerText = total;
+        const absent = data.filter(
+          (x) =>
+            getLogValue(x, "absent", "缺考") === "缺考" ||
+            getRecordStatus(x) === "缺考",
+        ).length;
 
-        document.getElementById("lateCheckinCount").innerText = late;
+        const interviewDone = data.filter(isInterviewCompletedRecord).length;
 
-        document.getElementById("absentCount").innerText = absent;
+        document.getElementById("recordTotalCount").innerText = count;
+
+        document.getElementById("recordTotalCheckin").innerText = total;
+
+        document.getElementById("recordLateCount").innerText = late;
+
+        document.getElementById("recordAbsentCount").innerText = absent;
+
+        document.getElementById("recordInterviewDoneCount").innerText =
+          interviewDone;
+      }
+
+      function filterCheckinRecords() {
+        const filters = getRecordFilters();
+        const keyword = filters.keyword.trim().toLowerCase();
+
+        const filtered = checkinRecordsCache.filter((item) => {
+          const activityCode = getRecordActivityCode(item);
+          const itemDate = formatRecordDate(
+            getLogValue(item, "date", "activityDate", "活動日期"),
+          );
+          const itemStatus = getRecordStatus(item);
+          const interviewStatus =
+            getLogValue(item, "interviewStatus", "面試狀態") || "";
+
+          const searchable = [
+            getLogValue(item, "name", "姓名"),
+            getLogValue(item, "idNumber", "identityNumber", "身分證字號"),
+            activityCode,
+            getLogValue(item, "activityName", "活動名稱"),
+            getLogValue(item, "operator", "checkinOperator", "操作人員"),
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+          const matchKeyword = !keyword || searchable.includes(keyword);
+
+          const matchStatus =
+            !filters.status ||
+            itemStatus === filters.status ||
+            getLogValue(item, "note", "備註") === filters.status ||
+            getLogValue(item, "absent", "缺考") === filters.status;
+
+          const matchActivity =
+            !filters.activity || activityCode === filters.activity;
+
+          const matchDate =
+            !filters.date || itemDate === filters.date.replaceAll("-", "/");
+
+          const matchInterview =
+            !filters.interview || interviewStatus === filters.interview;
+
+          return (
+            matchKeyword &&
+            matchStatus &&
+            matchActivity &&
+            matchDate &&
+            matchInterview
+          );
+        });
+
+        renderCheckinLogs(filtered);
+        updateLogSummary(filtered);
+      }
+
+      function getRecordFilters() {
+        return {
+          keyword: document.getElementById("recordSearch")?.value || "",
+          date: document.getElementById("recordDateFilter")?.value || "",
+          activity: document.getElementById("recordActivityFilter")?.value || "",
+          status: document.getElementById("recordStatusFilter")?.value || "",
+          interview: document.getElementById("recordInterviewFilter")?.value || "",
+        };
+      }
+
+      function setRecordFilters(filters) {
+        document.getElementById("recordSearch").value = filters.keyword || "";
+        document.getElementById("recordDateFilter").value = filters.date || "";
+        document.getElementById("recordActivityFilter").value =
+          filters.activity || "";
+        document.getElementById("recordStatusFilter").value =
+          filters.status || "";
+        document.getElementById("recordInterviewFilter").value =
+          filters.interview || "";
+      }
+
+      function populateRecordFilters(data) {
+        populateRecordSelect(
+          "recordActivityFilter",
+          "全部活動",
+          [...new Set(data.map(getRecordActivityCode).filter(Boolean))],
+        );
+
+        populateRecordSelect(
+          "recordInterviewFilter",
+          "全部面試",
+          [
+            ...new Set(
+              data
+                .map((item) => getLogValue(item, "interviewStatus", "面試狀態"))
+                .filter(Boolean),
+            ),
+          ],
+        );
+      }
+
+      function populateRecordSelect(id, defaultText, values) {
+        const select = document.getElementById(id);
+        const currentValue = select.value;
+
+        select.innerHTML = `<option value="">${defaultText}</option>`;
+
+        values.sort().forEach((value) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        });
+
+        select.value = values.includes(currentValue) ? currentValue : "";
+      }
+
+      function getRecordActivityCode(item) {
+        return (
+          getLogValue(
+            item,
+            "activityCode",
+            "activityNumber",
+            "code",
+            "活動代碼",
+            "活動編號",
+          ) || ""
+        );
+      }
+
+      function getRecordStatus(item) {
+        if (getLogValue(item, "absent", "缺考") === "缺考") return "缺考";
+
+        const status = getLogValue(item, "checkinStatus", "報到狀態");
+
+        if (status) return status;
+
+        if (getLogValue(item, "note", "備註") === "遲到報到") return "遲到報到";
+
+        if (getLogValue(item, "checkinTime", "報到時間")) return "已報到";
+
+        return "未報到";
+      }
+
+      function renderStatusBadge(status) {
+        const normalizedStatus = status || "-";
+
+        const className =
+          normalizedStatus === "缺考"
+            ? "status-danger"
+            : getCheckinStatusClass(normalizedStatus);
+
+        return `
+          <span class="status-badge ${className}">
+            ${escapeHtml(normalizedStatus)}
+          </span>
+        `;
+      }
+
+      function renderInterviewBadge(status) {
+        const normalizedStatus = status || "-";
+
+        return `
+          <span class="status-badge ${getInterviewStatusClass(normalizedStatus)}">
+            ${escapeHtml(normalizedStatus)}
+          </span>
+        `;
+      }
+
+      function formatRecordDate(date) {
+        if (!date) return "-";
+
+        return formatDate(date);
+      }
+
+      function formatRecordDateTime(datetime) {
+        if (!datetime) return "-";
+
+        return formatDateTime(datetime);
+      }
+
+      function getLogValue(item, ...keys) {
+        for (const key of keys) {
+          const value = item?.[key];
+
+          if (value !== undefined && value !== null && value !== "") {
+            return value;
+          }
+        }
+
+        return "";
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
       }
 
       /* =========================
-Loading
-========================= */
+      Loading
+      ========================= */
 
       function renderLogsLoading() {
-        document.getElementById("checkinLogsTable").innerHTML = `
+        document.getElementById("checkinRecordsTable").innerHTML = `
 
-    ${Array(6)
-      .fill(
-        `
+          ${Array(6)
+            .fill(
+              `
 
-      <tr class="skeleton-row">
+            <tr class="skeleton-row">
 
-        <td><div class="skeleton-box skeleton-sm"></div></td>
-        <td><div class="skeleton-box skeleton-md"></div></td>
-        <td><div class="skeleton-box skeleton-sm"></div></td>
-        <td><div class="skeleton-box skeleton-md"></div></td>
-        <td><div class="skeleton-box skeleton-sm"></div></td>
-        <td><div class="skeleton-box skeleton-sm"></div></td>
-        <td><div class="skeleton-box skeleton-md"></div></td>
-        <td><div class="skeleton-box skeleton-sm"></div></td>
-        <td><div class="skeleton-box skeleton-sm"></div></td>
+              <td><div class="skeleton-box skeleton-sm"></div></td>
+              <td><div class="skeleton-box skeleton-md"></div></td>
+              <td><div class="skeleton-box skeleton-sm"></div></td>
+              <td><div class="skeleton-box skeleton-md"></div></td>
+              <td><div class="skeleton-box skeleton-sm"></div></td>
+              <td><div class="skeleton-box skeleton-sm"></div></td>
+              <td><div class="skeleton-box skeleton-md"></div></td>
+              <td><div class="skeleton-box skeleton-sm"></div></td>
+              <td><div class="skeleton-box skeleton-sm"></div></td>
 
-      </tr>
+            </tr>
 
-    `,
-      )
-      .join("")}
+          `,
+            )
+            .join("")}
 
-  `;
+        `;
       }
       /* =========================
-Auto Login
-========================= */
+      Auto Login
+      ========================= */
 
       window.onload = function () {
         const user = localStorage.getItem("currentUser");
