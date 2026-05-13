@@ -1,0 +1,1757 @@
+/* =========================
+Reset
+========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+
+  min-height: 100vh;
+
+  font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+
+  background: #07142c;
+
+  overflow-x: hidden;
+}
+
+/* =========================
+Login
+========================= */
+
+.login-wrapper {
+  width: 100%;
+
+  min-height: 100vh;
+
+  display: flex;
+}
+
+.login-btn {
+  width: 100%;
+
+  height: 56px;
+
+  border: none;
+
+  border-radius: 18px;
+
+  font-size: 18px;
+
+  font-weight: 700;
+
+  letter-spacing: 1px;
+
+  color: white;
+
+  background: linear-gradient(135deg, #041c51, #0b1f4d);
+
+  transition: 0.25s ease;
+
+  box-shadow: 0 10px 24px rgba(4, 28, 81, 0.22);
+}
+
+/* Hover */
+
+.login-btn:hover {
+  transform: translateY(-2px);
+
+  background: linear-gradient(135deg, #0b1f4d, #163b82);
+
+  box-shadow: 0 14px 28px rgba(4, 28, 81, 0.3);
+}
+
+/* Click */
+
+.login-btn:active {
+  transform: scale(0.98);
+}
+
+/* Left */
+
+.login-left {
+  flex: 1;
+
+  background: linear-gradient(135deg, #041c51, #0b1f4d);
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  padding: 60px;
+}
+
+/* Brand */
+
+.brand-box {
+  width: 100%;
+
+  max-width: 520px;
+
+  text-align: left;
+
+  color: white;
+}
+
+.hero-logo {
+  width: 220px;
+
+  margin-bottom: 36px;
+
+  object-fit: contain;
+
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.18));
+}
+
+.brand-title {
+  font-size: 54px;
+
+  font-weight: 700;
+
+  line-height: 1.15;
+}
+
+.brand-subtitle {
+  margin-top: 18px;
+
+  font-size: 30px;
+
+  font-weight: 300;
+
+  opacity: 0.95;
+}
+
+.brand-en {
+  margin-top: 30px;
+
+  font-size: 20px;
+
+  line-height: 1.8;
+
+  opacity: 0.78;
+}
+
+.system-badge {
+  margin-top: 40px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  padding: 12px 24px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.12);
+
+  backdrop-filter: blur(10px);
+
+  font-size: 15px;
+
+  letter-spacing: 1px;
+}
+
+/* Right */
+
+.login-right {
+  width: 520px;
+
+  background: white;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  padding: 40px;
+}
+
+.login-panel {
+  width: 100%;
+
+  max-width: 360px;
+}
+
+.login-system-name {
+  font-size: 38px;
+
+  font-weight: 700;
+
+  color: #0f172a;
+
+  line-height: 1.4;
+}
+
+.login-system-subtitle {
+  margin-top: 10px;
+
+  color: #64748b;
+
+  font-size: 16px;
+
+  line-height: 1.7;
+}
+
+/* Input */
+
+.login-input {
+  height: 56px;
+
+  border-radius: 16px;
+
+  border: 1px solid #dbe2ea;
+
+  font-size: 16px;
+
+  padding: 0 18px;
+
+  transition: 0.2s;
+}
+
+.login-input:focus {
+  border-color: #2563eb;
+
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+/* Button */
+
+.login-btn {
+  width: 100%;
+
+  height: 56px;
+
+  border: none;
+
+  border-radius: 16px;
+
+  font-size: 18px;
+
+  font-weight: bold;
+
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+
+  color: white;
+
+  transition: 0.25s;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
+}
+
+/* =========================
+Loading
+========================= */
+
+.loading-box {
+  display: none;
+
+  text-align: center;
+
+  margin-top: 24px;
+}
+
+.loading-text {
+  margin-top: 16px;
+
+  color: #64748b;
+
+  font-size: 15px;
+}
+
+.spinner-border {
+  width: 2.8rem;
+  height: 2.8rem;
+
+  border-width: 0.25em;
+}
+
+/* =========================
+Dashboard
+========================= */
+
+.dashboard-layout {
+  width: 100%;
+
+  min-height: 100vh;
+
+  display: flex;
+
+  background: #f1f5f9;
+}
+
+/* Sidebar */
+
+.sidebar {
+  width: 200px;
+
+  background: #0f172a;
+
+  color: white;
+
+  padding: 28px 20px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+}
+
+.sidebar-title {
+  font-size: 28px;
+
+  font-weight: bold;
+}
+
+.sidebar-user {
+  margin-top: 12px;
+
+  color: #cbd5e1;
+
+  line-height: 1.7;
+}
+
+.sidebar hr {
+  border-color: rgba(255, 255, 255, 0.1);
+
+  margin: 24px 0;
+}
+
+.menu-btn {
+  width: 100%;
+
+  border: none;
+
+  background: none;
+
+  color: white;
+
+  text-align: left;
+
+  padding: 14px 18px;
+
+  border-radius: 14px;
+
+  margin-bottom: 10px;
+
+  transition: 0.2s;
+}
+
+.menu-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.menu-btn.active {
+  background: #2563eb;
+}
+
+/* Logout */
+
+.logout-area {
+  margin-top: auto;
+}
+
+/* Main */
+
+.main-content {
+  flex: 1;
+
+  padding: 40px;
+}
+
+.page-title {
+  font-size: 34px;
+
+  font-weight: bold;
+
+  margin-bottom: 30px;
+
+  color: #0f172a;
+}
+
+/* =========================
+Cards
+========================= */
+
+.stat-card,
+.content-card,
+.activity-card {
+  background: white;
+
+  border-radius: 24px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card {
+  padding: 30px;
+}
+
+.content-card {
+  padding: 36px;
+}
+
+.activity-card {
+  padding: 28px;
+
+  transition: 0.2s;
+
+  height: 100%;
+}
+
+.activity-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Stat */
+
+.stat-title {
+  color: #64748b;
+}
+
+.stat-value {
+  font-size: 42px;
+
+  font-weight: bold;
+
+  margin-top: 12px;
+
+  color: #0f172a;
+}
+
+.dashboard-info-grid {
+  margin-top: 24px;
+}
+
+.dashboard-info-card {
+  background: white;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.dashboard-clock-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.dashboard-info-title {
+  font-size: 16px;
+  color: #64748b;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.dashboard-clock {
+  font-size: 40px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dashboard-clock-date {
+  margin-top: 8px;
+  font-size: 16px;
+  color: #64748b;
+}
+
+.dashboard-info-value {
+  margin-top: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+@media (max-width: 992px) {
+  .dashboard-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Activity */
+
+.activity-toolbar {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 30px;
+}
+
+.activity-title {
+  font-size: 24px;
+
+  font-weight: bold;
+
+  color: #0f172a;
+}
+
+.activity-meta {
+  margin-top: 18px;
+
+  color: #64748b;
+
+  line-height: 1.8;
+}
+
+.activity-status {
+  display: inline-block;
+
+  padding: 6px 14px;
+
+  border-radius: 999px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  margin-top: 16px;
+}
+
+.status-draft {
+  background: #e2e8f0;
+
+  color: #475569;
+}
+
+.status-open {
+  background: #dcfce7;
+
+  color: #166534;
+}
+
+.activity-actions {
+  margin-top: 24px;
+
+  display: flex;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+}
+
+/* =========================
+Interview
+========================= */
+
+.calling-no {
+  font-size: 90px;
+
+  font-weight: bold;
+
+  color: #2563eb;
+}
+
+.calling-name {
+  font-size: 34px;
+
+  margin-top: 10px;
+}
+
+/* =========================
+Footer
+========================= */
+
+.system-footer {
+  width: 100%;
+
+  background: linear-gradient(90deg, #07142c, #0b1f4d, #07142c);
+
+  padding: 16px 24px;
+
+  margin-top: 0;
+}
+
+.footer-inner {
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  text-align: center;
+}
+
+.footer-title {
+  color: white;
+
+  font-size: 16px;
+
+  line-height: 2;
+
+  font-weight: 500;
+
+  letter-spacing: 0.4px;
+}
+
+.footer-subtitle {
+  font-size: 15px;
+
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.footer-copy {
+  font-size: 13px;
+
+  color: rgba(255, 255, 255, 0.58);
+}
+
+/* =========================
+Loading Animation
+========================= */
+
+.loading-wrapper {
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 80px 20px;
+}
+
+.loading-spinner {
+  width: 56px;
+  height: 56px;
+
+  border-radius: 50%;
+
+  border: 5px solid #dbeafe;
+  border-top: 5px solid #2563eb;
+
+  animation: spin 1s linear infinite;
+
+  margin-bottom: 18px;
+}
+
+.loading-text {
+  font-size: 18px;
+  font-weight: 600;
+
+  color: #475569;
+
+  letter-spacing: 1px;
+}
+
+/* =========================
+Checkin Card
+========================= */
+
+.checkin-card {
+  background: white;
+
+  border-radius: 24px;
+
+  padding: 28px;
+
+  margin-bottom: 24px;
+
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+
+  border: 1px solid #e2e8f0;
+
+  transition: 0.25s;
+}
+
+.checkin-card:hover {
+  transform: translateY(-2px);
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Header */
+
+.checkin-card-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: flex-start;
+
+  margin-bottom: 24px;
+}
+
+.checkin-title {
+  font-size: 28px;
+
+  font-weight: 700;
+
+  color: #0f172a;
+
+  line-height: 1.4;
+}
+
+.checkin-date {
+  margin-top: 8px;
+
+  color: #64748b;
+
+  font-size: 16px;
+}
+
+/* Badge */
+
+.checkin-badge {
+  background: #dcfce7;
+
+  color: #15803d;
+
+  padding: 8px 16px;
+
+  border-radius: 999px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+}
+
+/* Info */
+
+.checkin-info {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 16px;
+}
+
+.checkin-info-item {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.info-label {
+  color: #94a3b8;
+
+  font-size: 14px;
+}
+
+.info-value {
+  color: #334155;
+
+  font-size: 18px;
+
+  font-weight: 500;
+}
+
+/* Footer */
+
+.checkin-card-footer {
+  margin-top: 28px;
+}
+
+/* Button */
+
+.checkin-enter-btn {
+  width: 100%;
+
+  height: 54px;
+
+  border-radius: 16px;
+
+  font-size: 18px;
+
+  font-weight: 600;
+}
+
+/* =========================
+Dashboard Loading
+========================= */
+
+.loading-number {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  min-height: 64px;
+}
+
+/* Skeleton */
+
+.number-skeleton {
+  width: 72px;
+  height: 28px;
+
+  border-radius: 12px;
+
+  background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 50%, #e2e8f0 75%);
+
+  background-size: 200% 100%;
+
+  animation: skeleton-loading 1.2s infinite;
+}
+
+/* 尚未開放 */
+
+.status-info {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+/* 遲到 */
+
+.status-purple {
+  background: #eadcf8;
+  color: #7c3aed;
+}
+
+/* =========================
+缺考 Badge
+========================= */
+
+.status-absent {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 6px 14px;
+
+  border-radius: 999px;
+
+  background: #fee2e2;
+
+  color: #dc2626;
+
+  font-size: 14px;
+
+  font-weight: 700;
+}
+/* =========================
+Pagination
+========================= */
+
+.pagination-wrapper {
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 24px;
+
+  flex-wrap: wrap;
+}
+
+.page-btn {
+  min-width: 42px;
+  height: 42px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: white;
+
+  color: #334155;
+
+  font-weight: 600;
+
+  padding: 0 14px;
+
+  transition: 0.2s;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.page-btn:hover {
+  background: #2563eb;
+
+  color: white;
+}
+
+.page-btn.active {
+  background: #2563eb;
+
+  color: white;
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+
+  cursor: not-allowed;
+}
+
+.page-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.page-input {
+  width: 60px;
+  height: 42px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  color: #334155;
+  background: white;
+  transition: 0.2s;
+}
+
+.page-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* =========================
+Status Badge
+========================= */
+
+.status-badge {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-width: 72px;
+
+  padding: 6px 14px;
+
+  border-radius: 999px;
+
+  font-size: 14px;
+
+  font-weight: 700;
+}
+
+/* 已報到 */
+
+.status-success {
+  background: #dcfce7;
+
+  color: #166534;
+}
+
+/* 未報到 */
+
+.status-danger {
+  background: #fee2e2;
+
+  color: #991b1b;
+}
+
+/* 進行中 */
+
+.status-warning {
+  background: #fef3c7;
+
+  color: #92400e;
+}
+
+/* 已完成 */
+
+.status-primary {
+  background: #dbeafe;
+
+  color: #1d4ed8;
+}
+
+/* 灰 */
+
+.status-gray {
+  background: #e2e8f0;
+
+  color: #475569;
+}
+
+/* =========================
+Toast
+========================= */
+
+.custom-toast {
+  position: fixed;
+
+  top: 30px;
+
+  right: 30px;
+
+  z-index: 99999;
+
+  min-width: 240px;
+
+  padding: 16px 22px;
+
+  border-radius: 14px;
+
+  color: #fff;
+
+  font-size: 16px;
+
+  font-weight: 600;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+
+  opacity: 0;
+
+  transform: translateY(-20px);
+
+  transition: 0.3s;
+}
+
+.custom-toast.show {
+  opacity: 1;
+
+  transform: translateY(0);
+}
+
+.custom-toast.success {
+  background: #198754;
+}
+
+.custom-toast.error {
+  background: #dc3545;
+}
+
+/* =========================================================
+   Toolbar
+========================================================= */
+
+.checkin-toolbar {
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+
+  margin-bottom: 28px;
+}
+
+/* =========================================================
+   共用按鈕
+========================================================= */
+
+.btn-refresh-modern,
+.btn-back-modern {
+  height: 56px;
+
+  min-height: 56px;
+
+  padding: 0 28px;
+
+  border-radius: 18px;
+
+  border: 2px solid #dbe2ea;
+
+  background: #ffffff;
+
+  font-size: 18px;
+
+  font-weight: 700;
+
+  color: #0f172a;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.btn-refresh-modern:hover,
+.btn-back-modern:hover {
+  transform: translateY(-2px);
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================================
+ Header
+========================================================= */
+
+.record-header {
+  margin-bottom: 32px;
+}
+
+.page-subtitle {
+  margin-top: 10px;
+
+  color: #64748b;
+
+  font-size: 18px;
+
+  font-weight: 500;
+}
+
+/* =========================================================
+ Summary
+========================================================= */
+
+.record-summary-grid {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 24px;
+
+  margin-bottom: 28px;
+}
+
+.record-card {
+  background: #ffffff;
+
+  border-radius: 24px;
+
+  padding: 28px;
+
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+}
+
+.record-card-title {
+  color: #64748b;
+
+  font-size: 18px;
+
+  font-weight: 600;
+
+  margin-bottom: 18px;
+}
+
+.record-card-value {
+  font-size: 56px;
+
+  font-weight: 800;
+
+  line-height: 1;
+}
+
+.record-card-value.primary {
+  color: #2563eb;
+}
+
+.record-card-value.warning {
+  color: #d97706;
+}
+
+.record-card-value.danger {
+  color: #dc2626;
+}
+
+/* =========================================================
+ Toolbar
+========================================================= */
+
+.record-toolbar {
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+
+  margin-bottom: 28px;
+}
+
+.record-search-input {
+  flex: 1;
+
+  height: 58px;
+
+  border-radius: 18px;
+
+  border: 2px solid #dbe2ea;
+
+  background: #ffffff;
+
+  padding: 0 22px;
+
+  font-size: 18px;
+
+  font-weight: 600;
+}
+
+.record-select {
+  width: 180px;
+
+  height: 58px;
+
+  border-radius: 18px;
+
+  border: 2px solid #dbe2ea;
+
+  background: #ffffff;
+
+  padding: 0 18px;
+
+  font-size: 18px;
+
+  font-weight: 700;
+}
+
+.record-refresh-btn {
+  height: 58px;
+
+  padding: 0 28px;
+
+  border: none;
+
+  border-radius: 18px;
+
+  background: #2563eb;
+
+  color: #ffffff;
+
+  font-size: 18px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.record-refresh-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+ Table
+========================================================= */
+
+.record-table-wrapper {
+  background: #ffffff;
+
+  border-radius: 24px;
+
+  overflow-x: auto;
+
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+}
+
+.record-table {
+  width: 100%;
+
+  border-collapse: collapse;
+}
+
+.record-table thead {
+  background: #f8fafc;
+}
+
+.record-table th {
+  padding: 22px 18px;
+
+  text-align: left;
+
+  font-size: 18px;
+
+  font-weight: 800;
+
+  color: #0f172a;
+}
+
+.record-table td {
+  padding: 22px 18px;
+
+  border-top: 1px solid #e2e8f0;
+
+  font-size: 17px;
+
+  font-weight: 500;
+}
+
+.empty-cell {
+  text-align: center;
+
+  padding: 60px !important;
+
+  color: #94a3b8;
+
+  font-size: 18px;
+}
+
+/* 響應式表格樣式 */
+@media (max-width: 768px) {
+  .record-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* 平滑滾動在 iOS */
+  }
+
+  .record-table {
+    min-width: 800px; /* 確保表格不會壓縮太小，強制橫向滾動 */
+    font-size: 14px; /* 小屏幕上稍微縮小字體 */
+  }
+
+  .record-table th,
+  .record-table td {
+    padding: 12px 10px; /* 小屏幕上減少 padding */
+    white-space: nowrap; /* 防止文字換行 */
+  }
+
+  .record-table th {
+    font-size: 16px;
+  }
+
+  .record-table td {
+    font-size: 15px;
+  }
+}
+
+/* =========================
+Checkin Header
+========================= */
+
+.checkin-header {
+  margin-bottom: 28px;
+}
+
+.checkin-subtitle {
+  margin-top: 10px;
+
+  font-size: 20px;
+
+  color: #64748b;
+
+  font-weight: 500;
+}
+
+/* =========================
+Toolbar
+========================= */
+
+.checkin-toolbar-top {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  gap: 18px;
+
+  margin-bottom: 28px;
+}
+
+/* =========================================================
+   Search Input
+========================================================= */
+
+.search-wrapper {
+  flex: 1;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+
+  height: 56px;
+
+  padding: 0 24px;
+
+  border-radius: 18px;
+
+  border: 2px solid #dbe2ea;
+
+  background: #ffffff;
+
+  font-size: 18px;
+
+  font-weight: 600;
+
+  color: #334155;
+
+  box-sizing: border-box;
+}
+
+.checkin-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+  margin-bottom: 28px;
+}
+
+.filter-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 220px;
+  width: 100%;
+  max-width: 260px;
+}
+
+.filter-label {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+#locationFilter.filter-select,
+.filter-select {
+  width: 100%;
+  height: 56px;
+  padding: 0 18px;
+  border-radius: 18px;
+  border: 2px solid #dbe2ea;
+  background: #ffffff url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23334155' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 18px center;
+  background-size: 12px 8px;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #334155;
+  cursor: pointer;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  transition: all 0.2s ease;
+}
+
+#locationFilter.filter-select:hover,
+.filter-select:hover {
+  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.08);
+}
+
+#locationFilter.filter-select:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.filter-select::-ms-expand {
+  display: none;
+}
+
+.filter-select option {
+  color: #334155;
+}
+
+#locationFilter.filter-select::-ms-expand {
+  display: none;
+}
+
+.filter-select option {
+  color: #334155;
+}
+
+
+/* =========================================================
+   按鈕群組
+========================================================= */
+
+.toolbar-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 16px;
+}
+
+/* =========================================================
+   Table Skeleton
+========================================================= */
+
+.skeleton-row td {
+  padding: 22px 16px;
+}
+
+.skeleton-box {
+  width: 100%;
+
+  height: 18px;
+
+  border-radius: 999px;
+
+  background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 50%, #e2e8f0 75%);
+
+  background-size: 200% 100%;
+
+  animation: skeleton-loading 1.2s infinite;
+}
+
+.skeleton-box {
+  height: 18px;
+
+  border-radius: 999px;
+
+  background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 50%, #e2e8f0 75%);
+
+  background-size: 200% 100%;
+
+  animation: skeleton-loading 1.2s infinite;
+}
+
+/* 不同寬度 */
+.w-30 {
+  width: 30%;
+}
+.w-40 {
+  width: 40%;
+}
+.w-50 {
+  width: 50%;
+}
+.w-60 {
+  width: 60%;
+}
+.w-70 {
+  width: 70%;
+}
+.w-80 {
+  width: 80%;
+}
+
+.checkin-table {
+  width: 100%;
+
+  table-layout: fixed;
+
+  border-collapse: collapse;
+}
+
+/* Header */
+
+.checkin-table th {
+  font-size: 15px;
+
+  font-weight: 800;
+
+  color: #0f172a;
+
+  padding: 18px 12px;
+
+  white-space: nowrap;
+}
+
+/* Cell */
+
+.checkin-table td {
+  padding: 20px 12px;
+
+  vertical-align: middle;
+
+  font-size: 15px;
+
+  color: #334155;
+}
+
+/* 姓名 */
+
+.checkin-table th:nth-child(1),
+.checkin-table td:nth-child(1) {
+  width: 70px;
+}
+
+/* 身分證 */
+
+.checkin-table th:nth-child(2),
+.checkin-table td:nth-child(2) {
+  width: 150px;
+}
+
+/* 活動編號 */
+
+.checkin-table th:nth-child(3),
+.checkin-table td:nth-child(3) {
+  width: 90px;
+}
+
+/* 地點 */
+
+.checkin-table th:nth-child(4),
+.checkin-table td:nth-child(4) {
+  width: 140px;
+}
+
+/* 日期 */
+
+.checkin-table th:nth-child(5),
+.checkin-table td:nth-child(5) {
+  width: 140px;
+}
+
+/* 報到開始 */
+
+.checkin-table th:nth-child(6),
+.checkin-table td:nth-child(6) {
+  width: 110px;
+}
+
+/* 報到截止 */
+
+.checkin-table th:nth-child(7),
+.checkin-table td:nth-child(7) {
+  width: 110px;
+}
+
+/* 報到狀態 */
+
+.checkin-table th:nth-child(8),
+.checkin-table td:nth-child(8) {
+  width: 150px;
+}
+
+/* 面試狀態 */
+
+.checkin-table th:nth-child(9),
+.checkin-table td:nth-child(9) {
+  width: 140px;
+}
+
+/* 叫號 */
+
+.checkin-table th:nth-child(10),
+.checkin-table td:nth-child(10) {
+  width: 90px;
+}
+
+/* 缺考 */
+
+.checkin-table th:nth-child(11),
+.checkin-table td:nth-child(11) {
+  width: 90px;
+}
+
+/* 報到時間 */
+
+.checkin-table th:nth-child(12),
+.checkin-table td:nth-child(12) {
+  width: 180px;
+}
+
+/* 備註 */
+
+.checkin-table th:nth-child(13),
+.checkin-table td:nth-child(13) {
+  width: 120px;
+}
+
+/* 操作 */
+
+.checkin-table th:nth-child(14),
+.checkin-table td:nth-child(14) {
+  width: 110px;
+}
+
+/* Animation */
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Animation */
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================
+Mobile
+========================= */
+
+@media (max-width: 992px) {
+  .login-wrapper {
+    flex-direction: column;
+  }
+
+  .login-left {
+    min-height: 320px;
+
+    padding: 40px;
+  }
+
+  .login-right {
+    width: 100%;
+
+    padding: 40px 24px;
+  }
+
+  .brand-title {
+    font-size: 38px;
+  }
+
+  .brand-subtitle {
+    font-size: 24px;
+  }
+
+  .brand-en {
+    font-size: 16px;
+  }
+
+  .hero-logo {
+    width: 160px;
+  }
+
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .main-content {
+    padding: 24px;
+  }
+
+  .calling-no {
+    font-size: 64px;
+  }
+
+  .calling-name {
+    font-size: 24px;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+
+    text-align: center;
+  }
+
+  .footer-title {
+    font-size: 15px;
+
+    line-height: 1.8;
+  }
+}
