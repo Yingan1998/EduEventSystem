@@ -5964,8 +5964,8 @@ function renderPagination() {
           return;
         }
 
-        if (!("BarcodeDetector" in window)) {
-          showToast("此瀏覽器不支援相機條碼掃描，請改用搜尋欄輸入身分證字號", "error");
+        if (!navigator.mediaDevices?.getUserMedia) {
+          showToast("此瀏覽器無法開啟相機，請改用搜尋欄輸入身分證字號", "error");
           return;
         }
 
@@ -5974,28 +5974,78 @@ function renderPagination() {
           const video = document.getElementById("barcodeScannerVideo");
           const message = document.getElementById("barcodeScannerMessage");
 
-          barcodeDetector =
-            barcodeDetector ||
-            new BarcodeDetector({
-              formats: ["code_39", "code_128", "qr_code", "pdf417", "ean_13"],
-            });
+          stopIdBarcodeScanner();
 
-          barcodeScannerStream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: "environment",
-            },
-            audio: false,
-          });
+          barcodeScannerStream = await openPreferredCamera();
 
           video.srcObject = barcodeScannerStream;
           panel.classList.remove("d-none");
-          message.innerText = "請將條碼置於畫面中央";
+          await video.play();
+
+          barcodeDetector = await createBarcodeDetector();
+
+          if (!barcodeDetector) {
+            message.innerText =
+              "相機已開啟，但此瀏覽器不支援自動條碼辨識；請改用搜尋欄輸入身分證字號。";
+            showToast("相機已開啟，但此瀏覽器不支援自動條碼辨識", "error");
+            return;
+          }
+
+          message.innerText = "相機已開啟，請將身分證條碼置於畫面中央";
 
           clearInterval(barcodeScannerTimer);
           barcodeScannerTimer = setInterval(scanIdBarcodeFrame, 700);
         } catch (err) {
           console.error(err);
-          showToast("無法啟動相機，請確認瀏覽器權限", "error");
+          const isInsecure = location.protocol !== "https:" && location.hostname !== "localhost";
+          showToast(
+            isInsecure
+              ? "無法啟動相機：請使用 HTTPS 或 localhost 開啟系統"
+              : "無法啟動相機，請確認瀏覽器權限或裝置是否有鏡頭",
+            "error",
+          );
+        }
+      }
+
+      async function openPreferredCamera() {
+        try {
+          return await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: "environment" },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+            audio: false,
+          });
+        } catch (err) {
+          console.warn("後鏡頭開啟失敗，改用預設鏡頭", err);
+
+          return navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        }
+      }
+
+      async function createBarcodeDetector() {
+        if (!("BarcodeDetector" in window)) return null;
+
+        try {
+          const preferredFormats = ["code_39", "code_128", "qr_code", "pdf417", "ean_13"];
+          const supportedFormats =
+            typeof BarcodeDetector.getSupportedFormats === "function"
+              ? await BarcodeDetector.getSupportedFormats()
+              : preferredFormats;
+          const formats = preferredFormats.filter((format) =>
+            supportedFormats.includes(format),
+          );
+
+          return formats.length
+            ? new BarcodeDetector({ formats })
+            : new BarcodeDetector();
+        } catch (err) {
+          console.warn("條碼辨識器初始化失敗", err);
+          return null;
         }
       }
 
