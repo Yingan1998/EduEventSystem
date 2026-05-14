@@ -660,14 +660,18 @@ Cards
 }
 
 .dashboard-calling-table .dashboard-table-head div:nth-child(3) {
-  color: #1d4ed8;
+  color: #475569;
 }
 
 .dashboard-calling-table .dashboard-table-head div:nth-child(4) {
-  color: #047857;
+  color: #1d4ed8;
 }
 
 .dashboard-calling-table .dashboard-table-head div:nth-child(5) {
+  color: #047857;
+}
+
+.dashboard-calling-table .dashboard-table-head div:nth-child(6) {
   color: #b45309;
 }
 
@@ -675,6 +679,7 @@ Cards
   grid-template-columns:
     minmax(180px, 1.25fr)
     minmax(130px, 0.85fr)
+    minmax(100px, 0.65fr)
     minmax(130px, 0.8fr)
     minmax(180px, 1fr)
     minmax(200px, 1.15fr);
@@ -703,9 +708,10 @@ Cards
 
 .dashboard-call-number {
   color: #1d4ed8;
-  font-size: 30px;
+  font-size: 46px;
   font-weight: 900;
-  line-height: 1.15;
+  line-height: 1;
+  letter-spacing: 0;
 }
 
 .dashboard-call-number.muted {
@@ -713,11 +719,44 @@ Cards
 }
 
 .dashboard-call-name {
-  margin-top: 4px;
+  margin-top: 10px;
   color: #475569;
   font-size: 14px;
   font-weight: 800;
   line-height: 1.35;
+}
+
+.dashboard-venue-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.dashboard-venue-status.normal {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.dashboard-venue-status.checkin {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.dashboard-venue-status.waiting {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.dashboard-venue-status.behind {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .dashboard-checkin-summary {
@@ -1259,6 +1298,43 @@ Interview
   box-shadow: inset 4px 0 0 #2563eb;
 }
 
+.interview-section-row td {
+  background: #eef2ff;
+  color: #334155;
+  font-size: 15px;
+  font-weight: 900;
+  padding: 12px 14px;
+}
+
+.interview-late-section td {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.interview-location-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.interview-next-suggestion {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.interview-next-suggestion.muted {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
 .interview-row-checkbox,
 #interviewSelectAll {
   width: 18px;
@@ -1271,6 +1347,14 @@ Interview
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.late-call-hint {
+  margin-top: 8px;
+  color: #9a3412;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.4;
 }
 
 .interview-actions .btn {
@@ -1768,7 +1852,8 @@ Toast
 ========================================================= */
 
 .btn-refresh-modern,
-.btn-back-modern {
+.btn-back-modern,
+.btn-scan-modern {
   height: 56px;
 
   min-height: 56px;
@@ -1801,10 +1886,54 @@ Toast
 }
 
 .btn-refresh-modern:hover,
-.btn-back-modern:hover {
+.btn-back-modern:hover,
+.btn-scan-modern:hover {
   transform: translateY(-2px);
 
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.btn-scan-modern {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.scanner-panel {
+  margin: 0 0 22px;
+}
+
+.scanner-box {
+  max-width: 520px;
+  padding: 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 18px;
+  background: #eff6ff;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
+}
+
+.scanner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: #1e3a8a;
+}
+
+.scanner-video {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  background: #0f172a;
+  object-fit: cover;
+}
+
+.scanner-message {
+  margin-top: 10px;
+  color: #1d4ed8;
+  font-size: 14px;
+  font-weight: 900;
 }
 
 /* =========================================================
@@ -2286,6 +2415,18 @@ Toolbar
   max-width: 200px;
 }
 
+.filter-wrapper-action {
+  flex: 0 0 auto;
+  min-width: 120px;
+  max-width: 160px;
+}
+
+.filter-clear-btn {
+  height: 56px;
+  border-radius: 18px;
+  font-weight: 900;
+}
+
 .filter-label {
   font-size: 14px;
   color: #64748b;
@@ -2361,7 +2502,8 @@ Toolbar
   inline-size: 100%;
   max-width: 100%;
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: auto;
+  max-height: 70vh;
   -webkit-overflow-scrolling: touch;
   background: #fff;
   border-radius: 18px;
@@ -2437,6 +2579,12 @@ Toolbar
 /* Header */
 
 .checkin-table th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #f8fafc;
+  box-shadow: inset 0 -1px 0 #e2e8f0;
+
   font-size: 14px;
 
   font-weight: 800;
@@ -2487,6 +2635,44 @@ Toolbar
 
 .checkin-row-absent td {
   background: #fff7f7;
+}
+
+.late-call-control {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 180px;
+}
+
+.late-call-control label {
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.late-call-control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.late-call-time-input {
+  width: 112px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid #fbbf24;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #78350f;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.late-call-current {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .btn-refresh-modern.is-loading span {

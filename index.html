@@ -625,6 +625,7 @@
                     重新整理名單
                   </button>
 
+
                   <!-- 返回 -->
 
                   <button
@@ -640,10 +641,36 @@
 
                     返回列表
                   </button>
+
+
+                  <button
+                    class="btn-scan-modern"
+                    onclick="startIdBarcodeScanner()"
+                  >
+                    <span>▣</span>
+                    掃描報到
+                  </button>
+
+                  
                 </div>
               </div>
 
               <div id="checkinSummary" class="checkin-summary-grid"></div>
+
+              <div id="barcodeScannerPanel" class="scanner-panel d-none">
+                <div class="scanner-box">
+                  <div class="scanner-header">
+                    <strong>掃描身分證條碼</strong>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="stopIdBarcodeScanner()">
+                      關閉
+                    </button>
+                  </div>
+                  <video id="barcodeScannerVideo" class="scanner-video" autoplay playsinline></video>
+                  <div id="barcodeScannerMessage" class="scanner-message">
+                    請將條碼置於畫面中央
+                  </div>
+                </div>
+              </div>
 
               <div class="checkin-filter-row">
                 <div class="filter-wrapper">
@@ -707,6 +734,16 @@
                     type="time"
                     onchange="filterCheckinList()"
                   />
+                </div>
+
+                <div class="filter-wrapper filter-wrapper-action">
+                  <label class="filter-label">&nbsp;</label>
+                  <button
+                    class="btn btn-outline-secondary filter-clear-btn"
+                    onclick="resetCheckinFilters(); filterCheckinList();"
+                  >
+                    清除篩選
+                  </button>
                 </div>
               </div>
 
@@ -1048,6 +1085,14 @@
 
       let checkinRealtimeSyncing = false;
 
+      let autoAbsentSyncingUuids = new Set();
+
+      let barcodeScannerStream = null;
+
+      let barcodeScannerTimer = null;
+
+      let barcodeDetector = null;
+
       let interviewActivitiesCache = [];
 
       let currentInterviewMembers = [];
@@ -1066,6 +1111,10 @@
 
       let interviewPageSize = 10;
 
+      let interviewAutoCompleteTimer = null;
+
+      let recordCurrentStatsTimer = null;
+
       const VISITOR_TOTAL_KEY = "eduEventVisitorTotal";
 
       const VISITOR_DAILY_KEY = "eduEventVisitorDaily";
@@ -1081,7 +1130,7 @@
       ========================= */
 
       const API_URL =
-        "https://script.google.com/macros/s/AKfycbwy23lnh6Zz0GNtuwWDfLaDaPpBapAGgl-jHew3n_byQaZDAVHzkjHnoLyvTCrixow6/exec";
+        "https://script.google.com/macros/s/AKfycbxX3aAt6xnpqvmBXk4uPRrUXJQ6UvzV_Par9wC3yTJeJjW8HnPOEAarfRmcahBJLy67/exec";
 
       /* =========================
       Login
@@ -1338,6 +1387,19 @@
           note.includes("遲到") ||
           (isCheckedInRecord(member) && isLateCheckin(member, member.checkinTime))
         );
+      }
+
+      function isCheckinEnded(member, now = new Date()) {
+        if (!member?.checkinEndTime) return false;
+
+        const endTime = parseFrontDateTime(member.date, member.checkinEndTime);
+        const currentTime = new Date(now);
+
+        if (Number.isNaN(endTime.getTime()) || Number.isNaN(currentTime.getTime())) {
+          return false;
+        }
+
+        return currentTime > endTime;
       }
 
       function isInterviewCompletedRecord(item) {
@@ -1672,6 +1734,7 @@
               <div class="dashboard-table-row dashboard-calling-row dashboard-table-head">
                 <div>活動名稱</div>
                 <div>場地</div>
+                <div>狀態</div>
                 <div>目前叫號</div>
                 <div>報到情況</div>
                 <div>目前時段報到進度</div>
@@ -1739,6 +1802,12 @@
               checkedInCount,
               lateCount,
               uncheckedCount: Math.max(totalCount - checkedInCount, 0),
+              waitingCount: locationMembers.filter(
+                (member) =>
+                  isCheckedInRecord(member) &&
+                  getInterviewCallStatus(member) === "未叫號" &&
+                  !isInterviewCompletedRecord(member),
+              ).length,
             };
           });
       }
@@ -1864,6 +1933,7 @@
             <div class="dashboard-table-row dashboard-calling-row">
               <div>${escapeHtml(group.name)}</div>
               <div>未設定場地</div>
+              <div>${renderDashboardVenueStatusBadge({ status: "等待叫號" })}</div>
               <div class="dashboard-call-cell">
                 <div class="dashboard-call-number muted">-</div>
                 <div class="dashboard-call-name">尚無叫號</div>
@@ -1883,6 +1953,7 @@
               <div class="dashboard-table-row dashboard-calling-row">
                 <div>${escapeHtml(group.name)}</div>
                 <div>${escapeHtml(row.location)}</div>
+                <div>${renderDashboardVenueStatusBadge(getDashboardVenueStatus(row))}</div>
                 <div class="dashboard-call-cell ${row.calling ? "is-calling" : "is-waiting"}">
                   ${
                     row.calling
@@ -1902,6 +1973,32 @@
             `,
           )
           .join("");
+      }
+
+      function getDashboardVenueStatus(row) {
+        if (row.prepRange && row.prepRange.total > 0 && row.prepRange.checkedIn === 0) {
+          return { status: "進度落後", className: "behind" };
+        }
+
+        if (row.prepRange && row.prepRange.checkedIn < row.prepRange.total) {
+          return { status: "報到中", className: "checkin" };
+        }
+
+        if (row.waitingCount > 0 && !row.calling) {
+          return { status: "等待叫號", className: "waiting" };
+        }
+
+        return { status: "正常", className: "normal" };
+      }
+
+      function renderDashboardVenueStatusBadge(statusInfo) {
+        const className = statusInfo.className || "waiting";
+
+        return `
+          <span class="dashboard-venue-status ${className}">
+            ${escapeHtml(statusInfo.status)}
+          </span>
+        `;
       }
 
       async function setupDashboardRealtime() {
@@ -2752,6 +2849,7 @@
 
         if (pageName === "checkinRecords") {
           loadCheckinRecords();
+          startRecordCurrentStatsTimer();
         }
       }
 
@@ -2852,6 +2950,10 @@
             ...member,
             activityCode: member.activityCode || activityCode,
           }));
+          applyStoredLateCallTimes(currentInterviewMembers);
+          autoMarkAbsentMembers(currentInterviewMembers);
+          await autoCompleteExpiredInterviews();
+          startInterviewAutoCompleteTimer();
           populateInterviewFilters(currentInterviewMembers);
           filterInterviewMembers();
         } catch (err) {
@@ -2916,8 +3018,9 @@
           .value.trim()
           .toLowerCase();
 
-        filteredInterviewMembers = currentInterviewMembers
+        const filtered = currentInterviewMembers
           .filter((member) => !isAbsentRecord(member))
+          .filter((member) => !isInterviewCompletedRecord(member))
           .filter(isVisibleInInterviewCalling)
           .filter((member) => !location || member.location === location)
           .filter((member) => !status || getInterviewProcessStatus(member) === status)
@@ -2928,21 +3031,9 @@
               (member.name || "").toLowerCase().includes(keyword) ||
               (member.idNumber || "").toLowerCase().includes(keyword) ||
               getInterviewRegistrationNumber(member).toLowerCase().includes(keyword),
-          )
-          .sort((a, b) => {
-            const locationCompare = String(a.location || "").localeCompare(
-              String(b.location || ""),
-              "zh-Hant",
-            );
+          );
 
-            if (locationCompare !== 0) return locationCompare;
-
-            return String(a.activityNumber || "").localeCompare(
-              String(b.activityNumber || ""),
-              "zh-Hant",
-              { numeric: true },
-            );
-          });
+        filteredInterviewMembers = sortInterviewMembers(filtered);
 
         selectedInterviewUuids = new Set(
           [...selectedInterviewUuids].filter((uuid) =>
@@ -2955,6 +3046,34 @@
         clampInterviewPage();
         renderInterviewSummary();
         renderInterviewTable();
+      }
+
+      function sortInterviewMembers(members) {
+        return [...members].sort((a, b) => {
+          const priorityCompare =
+            getInterviewSortPriority(a) - getInterviewSortPriority(b);
+
+          if (priorityCompare !== 0) return priorityCompare;
+
+          const locationCompare = String(a.location || "").localeCompare(
+            String(b.location || ""),
+            "zh-Hant",
+          );
+
+          if (locationCompare !== 0) return locationCompare;
+
+          return String(a.activityNumber || "").localeCompare(
+            String(b.activityNumber || ""),
+            "zh-Hant",
+            { numeric: true },
+          );
+        });
+      }
+
+      function getInterviewSortPriority(member) {
+        if (getInterviewCallStatus(member) === "叫號中") return 0;
+        if (isLateCheckinRecord(member)) return 1;
+        return 2;
       }
 
       function renderInterviewSummary() {
@@ -3001,37 +3120,101 @@
 
         const pageMembers = getInterviewPageMembers();
 
-        tbody.innerHTML = pageMembers
-          .map(
-            (member) => `
-              <tr class="${getInterviewCallStatus(member) === "叫號中" ? "interview-row-calling" : ""}">
-                <td>
-                  <input
-                    type="checkbox"
-                    class="interview-row-checkbox"
-                    value="${escapeHtml(member.uuid)}"
-                    ${selectedInterviewUuids.has(member.uuid) ? "checked" : ""}
-                    ${isInterviewSelectable(member) ? "" : "disabled"}
-                    onchange="toggleInterviewSelection('${escapeHtml(member.uuid)}', this.checked)"
-                  />
-                </td>
-                <td>${escapeHtml(getInterviewRegistrationNumber(member))}</td>
-                <td>${escapeHtml(member.name || "-")}</td>
-                <td>${escapeHtml(maskIdNumber(member.idNumber || member.identityNumber || ""))}</td>
-                <td>${escapeHtml(member.location || "-")}</td>
-                <td>${renderStatusBadge(getInterviewCheckinStatus(member))}</td>
-                <td>${renderInterviewCallBadge(member)}</td>
-                <td>${renderInterviewBadge(getInterviewProcessStatus(member))}</td>
-                <td>${escapeHtml(formatInterviewDateTime(member.checkinTime))}</td>
-                <td>${escapeHtml(formatInterviewDateTime(member.finishTime))}</td>
-                <td>${renderInterviewActions(member)}</td>
-              </tr>
-            `,
-          )
-          .join("");
+        tbody.innerHTML = renderInterviewGroupedRows(pageMembers);
 
         updateInterviewSelectionUI();
         renderInterviewPagination();
+      }
+
+      function renderInterviewGroupedRows(members) {
+        let html = "";
+        let previousLocation = "";
+        let lateSectionRendered = false;
+
+        members.forEach((member) => {
+          const isLate = isLateCheckinRecord(member);
+
+          if (isLate && !lateSectionRendered) {
+            html += `
+              <tr class="interview-section-row interview-late-section">
+                <td colspan="11">遲到報到者</td>
+              </tr>
+            `;
+            previousLocation = "";
+            lateSectionRendered = true;
+          }
+
+          if (!isLate) {
+            const location = member.location || "未設定場地";
+
+            if (location !== previousLocation) {
+              html += `
+                <tr class="interview-section-row">
+                  <td colspan="11">
+                    <div class="interview-location-heading">
+                      <span>${escapeHtml(location)}</span>
+                      ${renderNextSuggestedInterviewBadge(location)}
+                    </div>
+                  </td>
+                </tr>
+              `;
+              previousLocation = location;
+            }
+          }
+
+          html += renderInterviewMemberRow(member);
+        });
+
+        return html;
+      }
+
+      function renderInterviewMemberRow(member) {
+        return `
+          <tr class="${getInterviewCallStatus(member) === "叫號中" ? "interview-row-calling" : ""}">
+            <td>
+              <input
+                type="checkbox"
+                class="interview-row-checkbox"
+                value="${escapeHtml(member.uuid)}"
+                ${selectedInterviewUuids.has(member.uuid) ? "checked" : ""}
+                ${isInterviewSelectable(member) ? "" : "disabled"}
+                onchange="toggleInterviewSelection('${escapeHtml(member.uuid)}', this.checked)"
+              />
+            </td>
+            <td>${escapeHtml(getInterviewRegistrationNumber(member))}</td>
+            <td>${escapeHtml(member.name || "-")}</td>
+            <td>${escapeHtml(maskIdNumber(member.idNumber || member.identityNumber || ""))}</td>
+            <td>${escapeHtml(member.location || "-")}</td>
+            <td>${renderStatusBadge(getInterviewCheckinStatus(member))}</td>
+            <td>${renderInterviewCallBadge(member)}${renderLateCallTimeHint(member)}</td>
+            <td>${renderInterviewBadge(getInterviewProcessStatus(member))}</td>
+            <td>${escapeHtml(formatInterviewDateTime(member.checkinTime))}</td>
+            <td>${escapeHtml(formatInterviewDateTime(member.finishTime))}</td>
+            <td>${renderInterviewActions(member)}</td>
+          </tr>
+        `;
+      }
+
+      function renderNextSuggestedInterviewBadge(location) {
+        const next = filteredInterviewMembers.find(
+          (member) =>
+            !isLateCheckinRecord(member) &&
+            (member.location || "未設定場地") === location &&
+            isCheckedInRecord(member) &&
+            getInterviewCallStatus(member) === "未叫號" &&
+            !isInterviewCompletedRecord(member),
+        );
+
+        if (!next) {
+          return `<span class="interview-next-suggestion muted">下一位：-</span>`;
+        }
+
+        return `
+          <span class="interview-next-suggestion">
+            下一位：${escapeHtml(getInterviewRegistrationNumber(next))}
+            ${escapeHtml(next.name || "")}
+          </span>
+        `;
       }
 
       function renderInterviewLoading() {
@@ -3221,6 +3404,19 @@
         `;
       }
 
+      function renderLateCallTimeHint(member) {
+        if (!isLateCheckinRecord(member)) return "";
+
+        const time = getLateCallAvailableTime(member);
+        const displayTime = formatLateCallDisplayTime(time);
+
+        return `
+          <div class="late-call-hint">
+            可叫號時段：${escapeHtml(displayTime || "未指定")}
+          </div>
+        `;
+      }
+
       function maskIdNumber(idNumber) {
         const value = String(idNumber || "").trim();
 
@@ -3384,10 +3580,12 @@
       }
 
       async function autoCompleteExpiredInterviews() {
+        if (!currentInterviewActivityCode) return;
+
         const expiredMembers = currentInterviewMembers.filter(
           (member) =>
             isInterviewPastEnd(member) &&
-            getInterviewCallStatus(member) !== "未叫號" &&
+            getInterviewProcessStatus(member) === "面試中" &&
             !isInterviewCompletedRecord(member),
         );
 
@@ -3421,9 +3619,22 @@
             member.finishTime = finishTime;
             member.currentCalling = "";
           });
+
+          filterInterviewMembers();
+          showToast(`面試時間已結束，已自動完成 ${expiredMembers.length} 人`, "success");
         } catch (err) {
           console.warn("自動完成面試失敗", err);
         }
+      }
+
+      function startInterviewAutoCompleteTimer() {
+        if (interviewAutoCompleteTimer) return;
+
+        interviewAutoCompleteTimer = setInterval(() => {
+          if (currentInterviewActivityCode && currentInterviewMembers.length > 0) {
+            autoCompleteExpiredInterviews();
+          }
+        }, 30000);
       }
 
       function isInterviewPastEnd(member, now = new Date()) {
@@ -3453,6 +3664,17 @@
 
         if (selected.some(isLateCheckinRecord)) {
           showToast("遲到報到者需等待指定時段，請在面試叫號階段單獨叫號", "error");
+          return;
+        }
+
+        const confirmList = selected
+          .map(
+            (member, index) =>
+              `${index + 1}. ${getInterviewRegistrationNumber(member)} ${member.name || ""}（${member.location || "-"}）`,
+          )
+          .join("\n");
+
+        if (!confirm(`確認批次叫號以下 ${selected.length} 人？\n\n${confirmList}`)) {
           return;
         }
 
@@ -3513,6 +3735,24 @@
         if (getInterviewCallStatus(member) === "叫號中") {
           showToast("此考生已在叫號中，狀態不可回退", "error");
           return;
+        }
+
+        if (isLateCheckinRecord(member)) {
+          const availableTime = getLateCallAvailableTime(member);
+          const displayTime = formatLateCallDisplayTime(availableTime);
+
+          if (availableTime && !isLateCallTimeReached(member)) {
+            showToast(`遲到報到者可叫號時間為 ${displayTime}，目前尚未到時段`, "error");
+            return;
+          }
+
+          const confirmLateCall = confirm(
+            availableTime
+              ? `此考生為遲到報到，可叫號時段為 ${displayTime}。\n確認要單獨叫號？`
+              : "此考生為遲到報到，尚未指定可叫號時段。\n確認仍要單獨叫號？",
+          );
+
+          if (!confirmLateCall) return;
         }
 
         try {
@@ -3629,6 +3869,7 @@
 
       function resetInterviewCallingState(member) {
         if (!member) return;
+        if (isInterviewCompletedRecord(member)) return;
 
         member.currentCalling = "";
         member.interviewStatus = "未開始";
@@ -3691,7 +3932,9 @@
         if (!ensureInterviewOperator()) return;
 
         const selected = getSelectedInterviewMembers().filter(
-          (member) => getInterviewCallStatus(member) === "叫號中",
+          (member) =>
+            getInterviewCallStatus(member) === "叫號中" &&
+            !isInterviewCompletedRecord(member),
         );
 
         if (selected.length === 0) {
@@ -3803,6 +4046,11 @@
         if (!member) return;
 
         if (!ensureInterviewOperator()) return;
+
+        if (isInterviewCompletedRecord(member)) {
+          showToast("面試已完成，報到狀態已鎖定", "error");
+          return;
+        }
 
         if (isCheckedInRecord(member)) {
           showToast("此考生已報到", "error");
@@ -4240,6 +4488,8 @@
           // cache
 
           currentCheckinMembers = members;
+          applyStoredLateCallTimes(currentCheckinMembers);
+          autoMarkAbsentMembers(currentCheckinMembers);
 
           // 搜尋 cache
           filteredCheckinMembers = members;
@@ -4340,6 +4590,8 @@
           const result = await response.json();
 
           currentCheckinMembers = result.data || [];
+          applyStoredLateCallTimes(currentCheckinMembers);
+          autoMarkAbsentMembers(currentCheckinMembers);
 
           populateLocationFilter(currentCheckinMembers);
           populateStatusFilters(currentCheckinMembers);
@@ -4514,24 +4766,49 @@
       </td>
 
       <td>
-          ${
-            member.note
-              ? `
-                  <span class="
-                      status-badge
-                      status-warning
-                  ">
-                      ${escapeHtml(member.note)}
-                  </span>
-                  `
-              : "-"
-          }
+          ${renderCheckinNoteCell(member)}
       </td>
 
                   <td>
 
           ${
-            canCancelCheckin(member)
+            isInterviewCompletedRecord(member)
+              ? `
+
+              <button
+
+                class="
+                  btn
+                  btn-secondary
+                  btn-sm
+                "
+
+                disabled>
+
+                已鎖定
+
+              </button>
+
+              `
+              : getInterviewCallStatus(member) === "叫號中"
+                ? `
+
+              <button
+
+                class="
+                  btn
+                  btn-secondary
+                  btn-sm
+                "
+
+                disabled>
+
+                叫號中
+
+              </button>
+
+              `
+              : canCancelCheckin(member)
               ? `
               <button
 
@@ -4617,7 +4894,280 @@
       }
 
       function canCancelCheckin(member) {
-        return isCheckedInRecord(member);
+        return (
+          isCheckedInRecord(member) &&
+          !isInterviewCompletedRecord(member) &&
+          getInterviewCallStatus(member) !== "叫號中"
+        );
+      }
+
+      function renderCheckinNoteCell(member) {
+        const noteBadge = member.note
+          ? `
+              <span class="status-badge status-warning">
+                ${escapeHtml(member.note)}
+              </span>
+            `
+          : "";
+
+        if (!isLateCheckinRecord(member)) {
+          return noteBadge || "-";
+        }
+
+        const time = getLateCallAvailableTime(member);
+        const displayTime = formatLateCallDisplayTime(time);
+        const uuid = escapeHtml(member.uuid || "");
+
+        return `
+          <div class="late-call-control">
+            ${noteBadge || '<span class="status-badge status-warning">遲到報到</span>'}
+            <label for="lateCallTime-${uuid}">可叫號時段</label>
+            <div class="late-call-control-row">
+              <input
+                id="lateCallTime-${uuid}"
+                class="late-call-time-input"
+                type="time"
+                value="${escapeHtml(time || "")}"
+                ${isInterviewCompletedRecord(member) ? "disabled" : ""}
+              />
+              <button
+                class="btn btn-outline-primary btn-sm"
+                onclick="setLateCallAvailableTime('${uuid}', this)"
+                ${isInterviewCompletedRecord(member) ? "disabled" : ""}
+              >
+                設定
+              </button>
+            </div>
+            <div class="late-call-current">
+              ${displayTime ? `目前：${escapeHtml(displayTime)}` : "尚未指定"}
+            </div>
+          </div>
+        `;
+      }
+
+      function getLateCallStorageKey(memberOrUuid) {
+        const uuid =
+          typeof memberOrUuid === "string"
+            ? memberOrUuid
+            : memberOrUuid?.uuid || "";
+        const activityCode =
+          typeof memberOrUuid === "string"
+            ? currentActivityCode || currentInterviewActivityCode || "activity"
+            : memberOrUuid?.activityCode ||
+              currentActivityCode ||
+              currentInterviewActivityCode ||
+              "activity";
+
+        return `lateCallAvailableTime:${activityCode}:${uuid}`;
+      }
+
+      function getLateCallAvailableTime(member) {
+        return normalizeTimeOnlyValue(
+          member?.lateCallAvailableTime ||
+            member?.lateCallTime ||
+            member?.lateInterviewCallTime ||
+            localStorage.getItem(getLateCallStorageKey(member)) ||
+            "",
+        );
+      }
+
+      function normalizeTimeOnlyValue(value) {
+        const raw = String(value || "").trim();
+
+        if (!raw) return "";
+
+        if (raw.includes("T")) {
+          const date = new Date(raw);
+
+          if (!Number.isNaN(date.getTime())) {
+            return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+          }
+        }
+
+        const zhTime = raw.match(/(上午|下午)?\s*(\d{1,2}):(\d{2})(?::\d{2})?/);
+        if (zhTime) {
+          let hour = Number(zhTime[2]);
+          const minute = zhTime[3];
+
+          if (zhTime[1] === "下午" && hour < 12) hour += 12;
+          if (zhTime[1] === "上午" && hour === 12) hour = 0;
+
+          return `${String(hour).padStart(2, "0")}:${minute}`;
+        }
+
+        return raw;
+      }
+
+      function formatLateCallDisplayTime(value) {
+        const normalized = normalizeTimeOnlyValue(value);
+        const match = normalized.match(/^(\d{1,2}):(\d{2})$/);
+
+        if (!match) return normalized;
+
+        const hour24 = Number(match[1]);
+        const minute = match[2];
+        const period = hour24 >= 12 ? "下午" : "上午";
+        let hour12 = hour24 % 12;
+
+        if (hour12 === 0) hour12 = 12;
+
+        return `${period} ${hour12}:${minute}:00`;
+      }
+
+      function applyStoredLateCallTimes(members) {
+        members.forEach((member) => {
+          const stored = localStorage.getItem(getLateCallStorageKey(member));
+
+          if (stored && !getLateCallAvailableTime(member)) {
+            member.lateCallAvailableTime = stored;
+          }
+        });
+      }
+
+      async function setLateCallAvailableTime(uuid, btn = null) {
+        const input = document.getElementById(`lateCallTime-${uuid}`);
+        const member = currentCheckinMembers.find((item) => item.uuid === uuid);
+        const time = normalizeTimeOnlyValue(input?.value || "");
+
+        if (!member) return;
+
+        if (!isLateCheckinRecord(member)) {
+          showToast("僅遲到報到者需要設定可叫號時段", "error");
+          return;
+        }
+
+        if (!time) {
+          showToast("請先選擇可叫號時段", "error");
+          return;
+        }
+
+        if (isInterviewCompletedRecord(member)) {
+          showToast("面試已完成，狀態已鎖定", "error");
+          return;
+        }
+
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = "儲存中...";
+        }
+
+        try {
+          const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
+          member.lateCallAvailableTime = time;
+          localStorage.setItem(getLateCallStorageKey(member), time);
+          await persistLateCallAvailableTime(member, currentUser.name || "");
+
+          applyCheckinFilters(false);
+          renderCheckinTable();
+          showToast(`已設定可叫號時段：${formatLateCallDisplayTime(time)}`, "success");
+        } catch (err) {
+          console.warn("可叫號時段同步失敗", err);
+          showToast("已暫存可叫號時段，但同步紀錄失敗", "error");
+        } finally {
+          if (btn && document.body.contains(btn)) {
+            btn.disabled = false;
+            btn.innerHTML = "設定";
+          }
+        }
+      }
+
+      async function persistLateCallAvailableTime(member, operator) {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8",
+          },
+          body: JSON.stringify({
+            action: "setLateCallAvailableTime",
+            uuid: member.uuid,
+            lateCallAvailableTime: getLateCallAvailableTime(member),
+            operator,
+          }),
+        }).catch(() => null);
+
+        const originalNote = member.note || "";
+        member.note = `${originalNote ? `${originalNote}；` : ""}可叫號時段 ${formatLateCallDisplayTime(getLateCallAvailableTime(member))}`;
+        await writeCheckinLog("設定遲到可叫號時段", member, operator);
+        member.note = originalNote;
+      }
+
+      function isLateCallTimeReached(member, now = new Date()) {
+        const availableTime = getLateCallAvailableTime(member);
+
+        if (!availableTime) return true;
+
+        const availableDate = parseFrontDateTime(member.date, availableTime);
+        const currentTime = new Date(now);
+
+        if (Number.isNaN(availableDate.getTime()) || Number.isNaN(currentTime.getTime())) {
+          return true;
+        }
+
+        return currentTime >= availableDate;
+      }
+
+      function autoMarkAbsentMembers(members) {
+        const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
+        members
+          .filter(
+            (member) =>
+              !isCheckedInRecord(member) &&
+              !isAbsentRecord(member) &&
+              !isInterviewCompletedRecord(member) &&
+              isCheckinEnded(member),
+          )
+          .forEach((member) => {
+            member.absent = "缺考";
+            member.checkinStatus = "缺考";
+            member.note = member.note || "報到截止未報到";
+            if (!hasAutoAbsentMarked(member)) {
+              markAutoAbsentStored(member);
+              persistAutoAbsent(member, currentUser.name || "系統自動");
+            }
+          });
+      }
+
+      function getAutoAbsentStorageKey(member) {
+        return `autoAbsentMarked:${member?.activityCode || currentActivityCode || currentInterviewActivityCode || "activity"}:${member?.uuid || ""}`;
+      }
+
+      function hasAutoAbsentMarked(member) {
+        return localStorage.getItem(getAutoAbsentStorageKey(member)) === "1";
+      }
+
+      function markAutoAbsentStored(member) {
+        localStorage.setItem(getAutoAbsentStorageKey(member), "1");
+      }
+
+      async function persistAutoAbsent(member, operator) {
+        if (!member?.uuid || autoAbsentSyncingUuids.has(member.uuid)) return;
+
+        autoAbsentSyncingUuids.add(member.uuid);
+
+        try {
+          await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "markAbsent",
+              uuid: member.uuid,
+              absent: "缺考",
+              checkinStatus: "缺考",
+              note: member.note || "報到截止未報到",
+              operator,
+            }),
+          }).catch(() => null);
+
+          await writeCheckinLog("自動標記缺考", member, operator);
+        } catch (err) {
+          console.warn("自動標記缺考同步失敗", err);
+        } finally {
+          autoAbsentSyncingUuids.delete(member.uuid);
+        }
       }
 
       function keepCheckinMemberVisible(uuid) {
@@ -4830,6 +5380,11 @@ function renderPagination() {
       async function checkinMember(uuid, btn = null) {
         const targetMember = currentCheckinMembers.find((item) => item.uuid === uuid);
 
+        if (targetMember && isInterviewCompletedRecord(targetMember)) {
+          showToast("面試已完成，報到狀態已鎖定", "error");
+          return;
+        }
+
         if (targetMember && isCheckinNotStarted(targetMember)) {
           showToast("尚未開始報到", "error");
           return;
@@ -4954,6 +5509,16 @@ function renderPagination() {
 
       async function cancelCheckin(uuid, btn = null) {
         const member = currentCheckinMembers.find((item) => item.uuid === uuid);
+
+        if (member && isInterviewCompletedRecord(member)) {
+          showToast("面試已完成，報到狀態已鎖定，無法取消報到", "error");
+          return;
+        }
+
+        if (member && getInterviewCallStatus(member) === "叫號中") {
+          showToast("此人員已在面試叫號中，不可取消報到", "error");
+          return;
+        }
 
         const confirmCancel = confirm(
           `確認取消 ${member?.name || "此人員"} 的報到紀錄？`,
@@ -5130,7 +5695,9 @@ function renderPagination() {
           目前叫號: member.currentCalling ? "叫號中" : "",
           缺考: member.absent || "",
           報到時間: member.checkinTime ? formatDateTime(member.checkinTime) : "",
-          備註: member.note || "",
+          備註: getLateCallAvailableTime(member)
+            ? `${member.note ? `${member.note}；` : ""}可叫號時段 ${formatLateCallDisplayTime(getLateCallAvailableTime(member))}`
+            : member.note || "",
           操作人員: operator || "",
           資料來源: "web",
         };
@@ -5389,6 +5956,120 @@ function renderPagination() {
         }
 
         checkinMember(first.uuid);
+      }
+
+      async function startIdBarcodeScanner() {
+        if (!currentActivityCode) {
+          showToast("請先進入活動報到名單", "error");
+          return;
+        }
+
+        if (!("BarcodeDetector" in window)) {
+          showToast("此瀏覽器不支援相機條碼掃描，請改用搜尋欄輸入身分證字號", "error");
+          return;
+        }
+
+        try {
+          const panel = document.getElementById("barcodeScannerPanel");
+          const video = document.getElementById("barcodeScannerVideo");
+          const message = document.getElementById("barcodeScannerMessage");
+
+          barcodeDetector =
+            barcodeDetector ||
+            new BarcodeDetector({
+              formats: ["code_39", "code_128", "qr_code", "pdf417", "ean_13"],
+            });
+
+          barcodeScannerStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: "environment",
+            },
+            audio: false,
+          });
+
+          video.srcObject = barcodeScannerStream;
+          panel.classList.remove("d-none");
+          message.innerText = "請將條碼置於畫面中央";
+
+          clearInterval(barcodeScannerTimer);
+          barcodeScannerTimer = setInterval(scanIdBarcodeFrame, 700);
+        } catch (err) {
+          console.error(err);
+          showToast("無法啟動相機，請確認瀏覽器權限", "error");
+        }
+      }
+
+      function stopIdBarcodeScanner() {
+        clearInterval(barcodeScannerTimer);
+        barcodeScannerTimer = null;
+
+        if (barcodeScannerStream) {
+          barcodeScannerStream.getTracks().forEach((track) => track.stop());
+          barcodeScannerStream = null;
+        }
+
+        const video = document.getElementById("barcodeScannerVideo");
+        const panel = document.getElementById("barcodeScannerPanel");
+
+        if (video) video.srcObject = null;
+        if (panel) panel.classList.add("d-none");
+      }
+
+      async function scanIdBarcodeFrame() {
+        const video = document.getElementById("barcodeScannerVideo");
+        const message = document.getElementById("barcodeScannerMessage");
+
+        if (!barcodeDetector || !video || video.readyState < 2) return;
+
+        try {
+          const barcodes = await barcodeDetector.detect(video);
+
+          if (!barcodes.length) return;
+
+          const rawValue = String(barcodes[0].rawValue || "").trim();
+          const member = findCheckinMemberByScannedId(rawValue);
+
+          if (!member) {
+            message.innerText = `找不到身分資料：${rawValue}`;
+            return;
+          }
+
+          stopIdBarcodeScanner();
+
+          if (isCheckedInRecord(member)) {
+            showToast(`${member.name || "此人員"} 已報到`, "error");
+            keepCheckinMemberVisible(member.uuid);
+            renderCheckinTable();
+            return;
+          }
+
+          if (isInterviewCompletedRecord(member)) {
+            showToast("面試已完成，報到狀態已鎖定", "error");
+            return;
+          }
+
+          document.getElementById("checkinSearch").value = member.idNumber || "";
+          filterCheckinList();
+          checkinMember(member.uuid);
+        } catch (err) {
+          console.warn("條碼掃描失敗", err);
+        }
+      }
+
+      function findCheckinMemberByScannedId(rawValue) {
+        const normalized = normalizeIdScanText(rawValue);
+
+        return currentCheckinMembers.find((member) => {
+          const id = normalizeIdScanText(member.idNumber || member.identityNumber || "");
+
+          return id && (normalized === id || normalized.includes(id));
+        });
+      }
+
+      function normalizeIdScanText(value) {
+        return String(value || "")
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, "");
       }
 
       /* =========================
@@ -5743,6 +6424,18 @@ function renderPagination() {
         }
       }
 
+      function startRecordCurrentStatsTimer() {
+        if (recordCurrentStatsTimer) return;
+
+        recordCurrentStatsTimer = setInterval(() => {
+          const recordsPage = document.getElementById("page-checkinRecords");
+
+          if (recordsPage && !recordsPage.classList.contains("d-none")) {
+            loadRecordCurrentStats();
+          }
+        }, 10000);
+      }
+
       /* =========================
       Render Checkin Logs
       ========================= */
@@ -5959,20 +6652,58 @@ function renderPagination() {
       }
 
       function updateCurrentRecordSummary(members) {
-        const totalCheckin = members.filter(isCheckedInRecord).length;
+        const scopedMembers = getRecordFilteredCurrentMembers(members);
+        const totalCheckin = scopedMembers.filter(isCheckedInRecord).length;
         const late = members.filter(
           (member) => getDisplayCheckinStatus(member) === "遲到報到",
         ).length;
-        const absent = members.filter(
+        const scopedLate = scopedMembers.filter(
+          (member) => getDisplayCheckinStatus(member) === "遲到報到",
+        ).length;
+        const absent = scopedMembers.filter(
           (member) => isAbsentRecord(member) && !isCheckedInRecord(member),
         ).length;
-        const interviewDone = members.filter(isInterviewCompletedRecord).length;
+        const interviewDone = scopedMembers.filter(isInterviewCompletedRecord).length;
 
         document.getElementById("recordTotalCheckin").innerText = totalCheckin;
-        document.getElementById("recordLateCount").innerText = late;
+        document.getElementById("recordLateCount").innerText = scopedLate;
         document.getElementById("recordAbsentCount").innerText = absent;
         document.getElementById("recordInterviewDoneCount").innerText =
           interviewDone;
+      }
+
+      function getRecordFilteredCurrentMembers(members) {
+        const filters = getRecordFilters();
+        const keyword = filters.keyword.trim().toLowerCase();
+
+        return members.filter((member) => {
+          const memberDate = formatRecordDate(member.date || member.activityDate);
+          const searchable = [
+            member.name,
+            member.idNumber,
+            member.identityNumber,
+            member.activityCode,
+            member.activityName,
+            member.operator,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+          const matchKeyword = !keyword || searchable.includes(keyword);
+          const matchActivity =
+            !filters.activity || member.activityCode === filters.activity;
+          const matchDate =
+            !filters.date || memberDate === filters.date.replaceAll("-", "/");
+          const status = getDisplayCheckinStatus(member);
+          const matchStatus =
+            !filters.status ||
+            status === filters.status ||
+            (filters.status === "缺考" && isAbsentRecord(member)) ||
+            (filters.status === "完成" && isInterviewCompletedRecord(member));
+
+          return matchKeyword && matchActivity && matchDate && matchStatus;
+        });
       }
 
       function filterCheckinRecords() {
