@@ -73,6 +73,10 @@
             登入系統
           </button>
 
+          <button class="guest-login-btn mt-3" onclick="enterGuestMode()">
+            訪客模式
+          </button>
+
           <div id="msg" class="alert alert-danger mt-3 d-none"></div>
 
           <!-- Loading -->
@@ -124,6 +128,10 @@
 
             <button class="menu-btn" onclick="showPage('checkinRecords', this)">
               報到紀錄
+            </button>
+
+            <button class="menu-btn" onclick="showPage('interviewCalling', this)">
+              面試叫號
             </button>
 
             <button class="menu-btn" onclick="showPage('settings', this)">
@@ -180,6 +188,17 @@
             <button class="menu-btn active">即時查詢</button>
           </div>
 
+          <!-- Guest -->
+
+          <div id="menuGuest" class="d-none">
+            <button
+              class="menu-btn active"
+              onclick="showPage('dashboard', this)"
+            >
+              系統總覽
+            </button>
+          </div>
+
           <!-- Logout -->
 
           <div class="logout-area">
@@ -206,10 +225,12 @@
                   </div>
                 </div>
 
-                <div id="dashboardClockDate" class="dashboard-clock-date">
+              <div id="dashboardClockDate" class="dashboard-clock-date">
                   ----/--/--
                 </div>
               </div>
+
+              <div id="dashboardStatsGrid" class="dashboard-stats-grid"></div>
 
               <div id="dashboardTodayOverview" class="dashboard-today-overview">
                 <div class="dashboard-empty">今日活動資料載入中...</div>
@@ -297,7 +318,10 @@
                   class="interview-select"
                   onchange="filterInterviewMembers()"
                 >
-                  <option value="">全部地點</option>
+                  <option value="">全部場地</option>
+                  <option value="第一試場">第一試場</option>
+                  <option value="第二試場">第二試場</option>
+                  <option value="第三試場">第三試場</option>
                 </select>
 
                 <select
@@ -306,6 +330,33 @@
                   onchange="filterInterviewMembers()"
                 >
                   <option value="">全部面試狀態</option>
+                </select>
+
+                <select
+                  id="interviewTimeFilter"
+                  class="interview-select"
+                  onchange="filterInterviewMembers()"
+                >
+                  <option value="">全部時段</option>
+                </select>
+
+                <input
+                  id="interviewSearchInput"
+                  class="interview-select"
+                  type="search"
+                  placeholder="搜尋姓名 / 身分證 / 序號"
+                  oninput="filterInterviewMembers()"
+                />
+
+                <select
+                  id="interviewPageSizeSelect"
+                  class="interview-select"
+                  onchange="changeInterviewPageSize(this.value)"
+                >
+                  <option value="10">每頁 10 筆</option>
+                  <option value="25">每頁 25 筆</option>
+                  <option value="50">每頁 50 筆</option>
+                  <option value="100">每頁 100 筆</option>
                 </select>
 
                 <button class="btn btn-primary" onclick="reloadInterviewMembers()">
@@ -317,15 +368,19 @@
 
               <div class="interview-batch-bar">
                 <button class="btn btn-primary" onclick="batchCallInterviewMembers()">
-                  批次叫號並標記進行中
+                  批次叫號
                 </button>
 
                 <button class="btn btn-success" onclick="batchCompleteInterviewMembers()">
                   批次完成面試
                 </button>
 
+                <button class="btn btn-outline-secondary" onclick="batchCancelInterviewCalling()">
+                  批次取消叫號
+                </button>
+
                 <span id="interviewSelectedCount" class="interview-selected-count">
-                  叫號 0 人｜完成 0 人
+                  流程：未報到 → 已報到 → 叫號中 → 面試中 → 面試完成
                 </span>
               </div>
 
@@ -333,23 +388,23 @@
                 <table class="table align-middle interview-table">
                   <thead>
                     <tr>
-                      <th>叫號</th>
-                      <th>完成</th>
                       <th>
                         <input
                           type="checkbox"
                           id="interviewSelectAll"
-                          onchange="toggleAllInterviewCallSelection(this.checked)"
+                          onchange="toggleAllInterviewSelection(this.checked)"
                         />
                       </th>
-                      <th>活動編號</th>
+                      <th>報名序號</th>
                       <th>姓名</th>
-                      <th>地點</th>
-                      <th>面試時間</th>
+                      <th>身分證字號</th>
+                      <th>活動場地</th>
                       <th>報到狀態</th>
-                      <th>目前叫號</th>
+                      <th>叫號狀態</th>
                       <th>面試狀態</th>
                       <th>報到時間</th>
+                      <th>完成時間</th>
+                      <th>操作按鈕</th>
                     </tr>
                   </thead>
 
@@ -398,7 +453,7 @@
                 </div>
 
                 <div class="record-card">
-                  <div class="record-card-title">已報到人數</div>
+                  <div class="record-card-title">目前總報到人數</div>
 
                   <div
                     class="record-card-value primary"
@@ -477,14 +532,6 @@
                   <option value="缺考">缺考</option>
                 </select>
 
-                <select
-                  id="recordInterviewFilter"
-                  class="record-select"
-                  onchange="filterCheckinRecords()"
-                >
-                  <option value="">全部面試</option>
-                </select>
-
                 <!-- Button -->
 
                 <button
@@ -511,8 +558,6 @@
 
                       <th>報到狀態</th>
 
-                      <th>面試狀態</th>
-
                       <th>報到時間</th>
 
                       <th>備註</th>
@@ -523,11 +568,13 @@
 
                   <tbody id="checkinRecordsTable">
                     <tr>
-                      <td colspan="9" class="empty-cell">尚無報到紀錄</td>
+                      <td colspan="8" class="empty-cell">尚無報到紀錄</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
+
+              <div id="recordPaginationContainer" class="pagination-wrapper"></div>
             </div>
 
             <!-- Checkin Room -->
@@ -940,6 +987,8 @@
 
       let dashboardTodayActivities = [];
 
+      let currentDashboardMembersCache = [];
+
       let activitiesCache = [];
 
       let filteredAdminActivities = [];
@@ -948,6 +997,10 @@
 
       let checkinRecordsCache = [];
 
+      let filteredCheckinRecords = [];
+
+      let recordCurrentMembersCache = [];
+
       /* =========================
       Pagination
       ========================= */
@@ -955,6 +1008,10 @@
       let currentCheckinPage = 1;
 
       const CHECKIN_PAGE_SIZE = 10;
+
+      const RECORD_PAGE_SIZE = 10;
+
+      let currentRecordPage = 1;
 
       let currentCheckinMembers = [];
 
@@ -978,16 +1035,28 @@
 
       let selectedInterviewCompleteUuids = new Set();
 
+      let selectedInterviewUuids = new Set();
+
       let currentInterviewPage = 1;
 
-      const INTERVIEW_PAGE_SIZE = 10;
+      let interviewPageSize = 10;
+
+      const VISITOR_TOTAL_KEY = "eduEventVisitorTotal";
+
+      const VISITOR_DAILY_KEY = "eduEventVisitorDaily";
+
+      const VISITOR_TOKEN_KEY = "eduEventVisitorToken";
+
+      const VISITOR_COUNTED_SESSION_KEY = "eduEventVisitorCountedSession";
+
+      let visitorStatsCache = null;
 
       /* =========================
       API URL
       ========================= */
 
       const API_URL =
-        "https://script.google.com/macros/s/AKfycbxMK93bA-Kcsls4vqgvM7oOOp_hrWQr_2Uy_rK9lAMhwQb9HwIUycQLrVqEBIxIihvi/exec";
+        "https://script.google.com/macros/s/AKfycbwy23lnh6Zz0GNtuwWDfLaDaPpBapAGgl-jHew3n_byQaZDAVHzkjHnoLyvTCrixow6/exec";
 
       /* =========================
       Login
@@ -1061,6 +1130,17 @@
 
           console.error(err);
         }
+      }
+
+      function enterGuestMode() {
+        const guestUser = {
+          name: "訪客",
+          role: "guest",
+          account: "guest",
+        };
+
+        localStorage.setItem("currentUser", JSON.stringify(guestUser));
+        showDashboard(guestUser);
       }
 
       /* =========================
@@ -1215,10 +1295,10 @@
 
       function isCheckedInRecord(item) {
         return (
-          !isAbsentRecord(item) &&
           (item.checkinTime ||
             item.checkinStatus === "已報到" ||
             item.checkinStatus === "遲到報到" ||
+            item.checkinStatus === "報到遲到" ||
             item.checkinStatus === "報到")
         );
       }
@@ -1226,7 +1306,11 @@
       function isInterviewCompletedRecord(item) {
         const status = item.interviewStatus || "";
 
-        return status === "已完成" || status.includes("完成");
+        return (
+          status === "已完成" ||
+          status.includes("完成") ||
+          item.currentCalling === "已完成"
+        );
       }
 
       function shouldHideFromCheckinTable(member) {
@@ -1253,8 +1337,241 @@
         return `${year}/${month}/${day}`;
       }
 
+      function getVisitorToken() {
+        let token = localStorage.getItem(VISITOR_TOKEN_KEY);
+
+        if (!token) {
+          token =
+            (typeof crypto !== "undefined" && crypto.randomUUID
+              ? crypto.randomUUID()
+              : "") ||
+            `visitor-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+          localStorage.setItem(VISITOR_TOKEN_KEY, token);
+        }
+
+        return token;
+      }
+
+      async function initVisitorCounter() {
+        const token = getVisitorToken();
+        const today = getTaipeiDateString();
+        const countedKey = `${today}:${token}`;
+        const shouldCountVisit =
+          sessionStorage.getItem(VISITOR_COUNTED_SESSION_KEY) !== countedKey;
+
+        if (shouldCountVisit) {
+          const daily = readVisitorDaily();
+          const todayVisitors = new Set(daily[today] || []);
+
+          todayVisitors.add(token);
+          daily[today] = [...todayVisitors];
+          localStorage.setItem(VISITOR_DAILY_KEY, JSON.stringify(daily));
+
+          if (!localStorage.getItem(`${VISITOR_TOTAL_KEY}:${token}`)) {
+            const total = Number(localStorage.getItem(VISITOR_TOTAL_KEY) || "0") + 1;
+            localStorage.setItem(VISITOR_TOTAL_KEY, String(total));
+            localStorage.setItem(`${VISITOR_TOTAL_KEY}:${token}`, "1");
+          }
+
+          sessionStorage.setItem(VISITOR_COUNTED_SESSION_KEY, countedKey);
+        }
+
+        await recordVisitorToGas({ shouldCountVisit });
+        await updateVisitorPresence();
+        setInterval(updateVisitorPresence, 30000);
+      }
+
+      async function recordVisitorToGas({ shouldCountVisit }) {
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "recordVisitor",
+              token: getVisitorToken(),
+              shouldCountVisit,
+              visitedAt: new Date().toISOString(),
+              page: location.pathname,
+              userAgent: navigator.userAgent,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success && result.stats) {
+            visitorStatsCache = normalizeVisitorStats(result.stats);
+          }
+        } catch (err) {
+          console.warn("GAS 瀏覽紀錄寫入失敗，暫用本機統計", err);
+        }
+      }
+
+      function readVisitorDaily() {
+        try {
+          return JSON.parse(localStorage.getItem(VISITOR_DAILY_KEY) || "{}");
+        } catch (err) {
+          return {};
+        }
+      }
+
+      async function updateVisitorPresence() {
+        const token = getVisitorToken();
+        const now = Date.now();
+        const presenceKey = "eduEventVisitorPresence";
+        let presence = {};
+
+        try {
+          presence = JSON.parse(localStorage.getItem(presenceKey) || "{}");
+        } catch (err) {
+          presence = {};
+        }
+
+        presence[token] = now;
+
+        Object.keys(presence).forEach((key) => {
+          if (now - presence[key] > 60000) {
+            delete presence[key];
+          }
+        });
+
+        localStorage.setItem(presenceKey, JSON.stringify(presence));
+        await syncVisitorStatsFromGas();
+        renderDashboardStats(currentDashboardMembersCache || []);
+      }
+
+      async function syncVisitorStatsFromGas() {
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "visitorHeartbeat",
+              token: getVisitorToken(),
+              lastSeenAt: new Date().toISOString(),
+            }),
+          });
+
+          const heartbeatResult = await response.json();
+
+          if (heartbeatResult.success && heartbeatResult.stats) {
+            visitorStatsCache = normalizeVisitorStats(heartbeatResult.stats);
+            return;
+          }
+
+          const statsResponse = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "getVisitorStats",
+              token: getVisitorToken(),
+            }),
+          });
+
+          const statsResult = await statsResponse.json();
+
+          if (statsResult.success && statsResult.stats) {
+            visitorStatsCache = normalizeVisitorStats(statsResult.stats);
+          }
+        } catch (err) {
+          console.warn("GAS 瀏覽統計同步失敗，暫用本機統計", err);
+        }
+      }
+
+      function normalizeVisitorStats(stats) {
+        return {
+          todayVisitors: Number(stats.todayVisitors || stats.today || 0),
+          totalVisitors: Number(stats.totalVisitors || stats.total || 0),
+          onlineVisitors: Number(stats.onlineVisitors || stats.online || 0),
+        };
+      }
+
+      function getVisitorStats() {
+        if (visitorStatsCache) {
+          return {
+            todayVisitors: visitorStatsCache.todayVisitors,
+            totalVisitors: visitorStatsCache.totalVisitors,
+            onlineVisitors: Math.max(visitorStatsCache.onlineVisitors, 1),
+          };
+        }
+
+        const daily = readVisitorDaily();
+        const today = getTaipeiDateString();
+        const total = Number(localStorage.getItem(VISITOR_TOTAL_KEY) || "0");
+        let presence = {};
+
+        try {
+          presence = JSON.parse(localStorage.getItem("eduEventVisitorPresence") || "{}");
+        } catch (err) {
+          presence = {};
+        }
+
+        const now = Date.now();
+        const online = Object.values(presence).filter(
+          (lastSeen) => now - Number(lastSeen) <= 60000,
+        ).length;
+
+        return {
+          todayVisitors: (daily[today] || []).length,
+          totalVisitors: total,
+          onlineVisitors: Math.max(online, 1),
+        };
+      }
+
+      function renderDashboardStats(members) {
+        const container = document.getElementById("dashboardStatsGrid");
+
+        if (!container) return;
+
+        const eligibleMembers = members.filter((member) => !isAbsentRecord(member));
+        const todayCheckedIn = eligibleMembers.filter(isCheckedInRecord).length;
+        const interviewDone = eligibleMembers.filter(isInterviewCompletedRecord).length;
+        const waitingCall = eligibleMembers.filter(
+          (member) =>
+            isCheckedInRecord(member) &&
+            getInterviewCallStatus(member) === "未叫號" &&
+            !isInterviewCompletedRecord(member),
+        ).length;
+        const visitorStats = getVisitorStats();
+
+        container.innerHTML = `
+          <div class="dashboard-stat-card">
+            <span>今日報到人數</span>
+            <strong>${todayCheckedIn}</strong>
+          </div>
+          <div class="dashboard-stat-card success">
+            <span>已完成面試人數</span>
+            <strong>${interviewDone}</strong>
+          </div>
+          <div class="dashboard-stat-card warning">
+            <span>等待叫號人數</span>
+            <strong>${waitingCall}</strong>
+          </div>
+          <div class="dashboard-stat-card primary">
+            <span>目前線上</span>
+            <strong>${visitorStats.onlineVisitors}</strong>
+          </div>
+          <div class="dashboard-stat-card muted">
+            <span>今日瀏覽</span>
+            <strong>${visitorStats.todayVisitors}</strong>
+          </div>
+          <div class="dashboard-stat-card">
+            <span>累積瀏覽</span>
+            <strong>${visitorStats.totalVisitors.toLocaleString("zh-TW")}</strong>
+          </div>
+        `;
+      }
+
       function renderDashboardOverview(members) {
         const container = document.getElementById("dashboardTodayOverview");
+
+        currentDashboardMembersCache = members;
+        renderDashboardStats(members);
 
         dashboardOverviewRendered = true;
 
@@ -1318,6 +1635,7 @@
                 <div>場地</div>
                 <div>目前叫號</div>
                 <div>人員</div>
+                <div>目前時段應完成報到號</div>
               </div>
               ${groups.map(renderDashboardCallingRows).join("")}
             </div>
@@ -1346,6 +1664,7 @@
             checkedInCount,
             uncheckedCount,
             callingByLocation: getDashboardCallingByLocation(activityMembers),
+            prepRangeByLocation: getDashboardPrepRangeByLocation(activityMembers),
           };
         });
       }
@@ -1354,7 +1673,7 @@
         const callingMap = new Map();
 
         members
-          .filter((member) => member.currentCalling)
+          .filter((member) => member.currentCalling && !isInterviewCompletedRecord(member))
           .forEach((member) => {
             const location = member.location || "未設定場地";
             const callNumber = getDashboardCallNumber(member);
@@ -1371,6 +1690,60 @@
           });
 
         return [...callingMap.values()];
+      }
+
+      function getDashboardPrepRangeByLocation(members) {
+        const rangeMap = new Map();
+        const now = new Date();
+
+        members
+          .filter((member) => isMemberInCurrentCheckinSlot(member, now))
+          .forEach((member) => {
+            const location = member.location || "未設定場地";
+            const number = getDashboardCallNumber(member);
+            const current = rangeMap.get(location) || {
+              minValue: number.value,
+              maxValue: number.value,
+              minLabel: number.label,
+              maxLabel: number.label,
+            };
+
+            if (number.value < current.minValue) {
+              current.minValue = number.value;
+              current.minLabel = number.label;
+            }
+
+            if (number.value > current.maxValue) {
+              current.maxValue = number.value;
+              current.maxLabel = number.label;
+            }
+
+            rangeMap.set(location, current);
+          });
+
+        return rangeMap;
+      }
+
+      function isMemberInCurrentCheckinSlot(member, now) {
+        if (!member?.checkinStartTime || !member?.checkinEndTime) return false;
+
+        const start = parseFrontDateTime(member.date, member.checkinStartTime);
+        const end = parseFrontDateTime(member.date, member.checkinEndTime);
+
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+          return false;
+        }
+
+        return now >= start && now <= end;
+      }
+
+      function formatDashboardPrepRange(group, location) {
+        const range = group.prepRangeByLocation.get(location);
+
+        if (!range) return "-";
+        if (range.minLabel === range.maxLabel) return `${escapeHtml(range.minLabel)}號`;
+
+        return `${escapeHtml(range.minLabel)}-${escapeHtml(range.maxLabel)}號`;
       }
 
       function getDashboardCallNumber(member) {
@@ -1397,6 +1770,7 @@
               <div>尚無叫號</div>
               <div class="dashboard-number muted">-</div>
               <div>-</div>
+              <div>-</div>
             </div>
           `;
         }
@@ -1409,6 +1783,7 @@
                 <div>${escapeHtml(calling.location)}</div>
                 <div class="dashboard-number primary">${escapeHtml(calling.label)}</div>
                 <div>${escapeHtml(calling.name)}</div>
+                <div>${formatDashboardPrepRange(group, calling.location)}</div>
               </div>
             `,
           )
@@ -1476,39 +1851,70 @@
 
         document.getElementById("dashboardPage").classList.remove("d-none");
 
+        ["menuAdmin", "menuCheckin", "menuInterview", "menuReadonly", "menuGuest"].forEach(
+          (id) => document.getElementById(id).classList.add("d-none"),
+        );
+
         document.getElementById("welcomeText").innerHTML = `
-            歡迎：<br>
-            ${user.name}<br>
-            (${user.role})
+            目前模式：<br>
+            ${user.role === "guest" ? "訪客模式" : escapeHtml(user.name || "-")}<br>
+            (${escapeHtml(getRoleLabel(user.role))})
         `;
+
+        let menuSelector = "#menuGuest .menu-btn";
 
         switch (user.role) {
           case "admin":
             document.getElementById("menuAdmin").classList.remove("d-none");
+            menuSelector = "#menuAdmin .menu-btn";
 
             break;
 
           case "checkin":
             document.getElementById("menuCheckin").classList.remove("d-none");
+            menuSelector = "#menuCheckin .menu-btn";
 
             break;
 
           case "interview":
             document.getElementById("menuInterview").classList.remove("d-none");
+            menuSelector = "#menuInterview .menu-btn";
 
             break;
 
           case "readonly":
             document.getElementById("menuReadonly").classList.remove("d-none");
+            menuSelector = "#menuReadonly .menu-btn";
 
+            break;
+
+          case "guest":
+            document.getElementById("menuGuest").classList.remove("d-none");
             break;
         }
 
         // 預設頁面
 
-        const firstMenu = document.querySelector(".menu-btn.active");
+        document.querySelectorAll(".menu-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+
+        const firstMenu = document.querySelector(menuSelector);
+        firstMenu?.classList.add("active");
 
         showPage("dashboard", firstMenu);
+      }
+
+      function getRoleLabel(role) {
+        const labels = {
+          admin: "管理者",
+          checkin: "報到人員",
+          interview: "面試人員",
+          readonly: "唯讀",
+          guest: "訪客模式",
+        };
+
+        return labels[role] || role || "-";
       }
       /* =========================
       Logout
@@ -1534,6 +1940,8 @@
         document.getElementById("menuInterview").classList.add("d-none");
 
         document.getElementById("menuReadonly").classList.add("d-none");
+
+        document.getElementById("menuGuest").classList.add("d-none");
 
         localStorage.removeItem("currentUser");
 
@@ -2168,6 +2576,11 @@
       ========================= */
 
       function showPage(pageName, btn) {
+        if (isGuestMode() && pageName !== "dashboard") {
+          showToast("訪客模式僅可查看系統總覽", "error");
+          return;
+        }
+
         stopCheckinRealtimeSync();
 
         // 隱藏全部頁面
@@ -2186,7 +2599,7 @@
           b.classList.remove("active");
         });
 
-        btn.classList.add("active");
+        btn?.classList.add("active");
 
         /* =========================
           特殊頁面
@@ -2239,7 +2652,10 @@
       async function loadInterviewActivities() {
         const select = document.getElementById("interviewActivitySelect");
 
-        if (interviewActivitiesCache.length > 0) return;
+        if (interviewActivitiesCache.length > 0) {
+          await ensureDefaultInterviewActivity();
+          return;
+        }
 
         select.innerHTML = '<option value="">載入活動中...</option>';
 
@@ -2278,6 +2694,7 @@
               )
               .join("")}
           `;
+          await ensureDefaultInterviewActivity();
         } catch (err) {
           console.error(err);
           select.innerHTML = '<option value="">活動載入失敗</option>';
@@ -2291,6 +2708,7 @@
         currentInterviewActivityCode = activityCode;
         selectedInterviewCallUuids.clear();
         selectedInterviewCompleteUuids.clear();
+        selectedInterviewUuids.clear();
         currentInterviewPage = 1;
 
         if (!activityCode) {
@@ -2316,7 +2734,10 @@
 
           const result = await response.json();
 
-          currentInterviewMembers = result.data || [];
+          currentInterviewMembers = (result.data || []).map((member) => ({
+            ...member,
+            activityCode: member.activityCode || activityCode,
+          }));
           populateInterviewFilters(currentInterviewMembers);
           filterInterviewMembers();
         } catch (err) {
@@ -2337,20 +2758,26 @@
       }
 
       function populateInterviewFilters(members) {
-        populateInterviewSelect(
-          "interviewLocationFilter",
-          "全部地點",
-          [...new Set(members.map((member) => member.location).filter(Boolean))],
-        );
+        const defaultLocations = ["第一試場", "第二試場", "第三試場"];
+        const locations = [
+          ...new Set([
+            ...defaultLocations,
+            ...members.map((member) => member.location).filter(Boolean),
+          ]),
+        ];
+
+        populateInterviewSelect("interviewLocationFilter", "全部場地", locations);
 
         populateInterviewSelect(
           "interviewStatusPageFilter",
           "全部面試狀態",
-          [
-            ...new Set(
-              members.map((member) => member.interviewStatus).filter(Boolean),
-            ),
-          ],
+          ["未開始", "面試中", "完成"],
+        );
+
+        populateInterviewSelect(
+          "interviewTimeFilter",
+          "全部時段",
+          [...new Set(members.map(getInterviewTimeSlot).filter((slot) => slot !== "-"))],
         );
       }
 
@@ -2373,11 +2800,24 @@
       function filterInterviewMembers() {
         const location = document.getElementById("interviewLocationFilter").value;
         const status = document.getElementById("interviewStatusPageFilter").value;
+        const timeSlot = document.getElementById("interviewTimeFilter").value;
+        const keyword = document
+          .getElementById("interviewSearchInput")
+          .value.trim()
+          .toLowerCase();
 
         filteredInterviewMembers = currentInterviewMembers
-          .filter((member) => isCheckedInRecord(member) && !isAbsentRecord(member))
+          .filter((member) => !isAbsentRecord(member))
           .filter((member) => !location || member.location === location)
-          .filter((member) => !status || member.interviewStatus === status)
+          .filter((member) => !status || getInterviewProcessStatus(member) === status)
+          .filter((member) => !timeSlot || getInterviewTimeSlot(member) === timeSlot)
+          .filter(
+            (member) =>
+              !keyword ||
+              (member.name || "").toLowerCase().includes(keyword) ||
+              (member.idNumber || "").toLowerCase().includes(keyword) ||
+              getInterviewRegistrationNumber(member).toLowerCase().includes(keyword),
+          )
           .sort((a, b) => {
             const locationCompare = String(a.location || "").localeCompare(
               String(b.location || ""),
@@ -2393,19 +2833,15 @@
             );
           });
 
-        selectedInterviewCallUuids = new Set(
-          [...selectedInterviewCallUuids].filter((uuid) =>
-            filteredInterviewMembers.some((member) => member.uuid === uuid),
+        selectedInterviewUuids = new Set(
+          [...selectedInterviewUuids].filter((uuid) =>
+            filteredInterviewMembers.some(
+              (member) => member.uuid === uuid && isInterviewSelectable(member),
+            ),
           ),
         );
 
-        selectedInterviewCompleteUuids = new Set(
-          [...selectedInterviewCompleteUuids].filter((uuid) =>
-            filteredInterviewMembers.some((member) => member.uuid === uuid),
-          ),
-        );
-
-        currentInterviewPage = 1;
+        clampInterviewPage();
         renderInterviewSummary();
         renderInterviewTable();
       }
@@ -2414,10 +2850,14 @@
         const eligible = currentInterviewMembers.filter(
           (member) => isCheckedInRecord(member) && !isAbsentRecord(member),
         );
-        const calling = eligible.filter((member) => member.currentCalling).length;
+        const calling = eligible.filter(
+          (member) => getInterviewCallStatus(member) === "叫號中",
+        ).length;
         const done = eligible.filter(isInterviewCompletedRecord).length;
         const waiting = eligible.filter(
-          (member) => !isInterviewCompletedRecord(member),
+          (member) =>
+            getInterviewCallStatus(member) === "未叫號" &&
+            !isInterviewCompletedRecord(member),
         ).length;
 
         document.getElementById("interviewSummary").innerHTML = `
@@ -2448,33 +2888,39 @@
           return;
         }
 
-        tbody.innerHTML = filteredInterviewMembers
+        const pageMembers = getInterviewPageMembers();
+
+        tbody.innerHTML = pageMembers
           .map(
             (member) => `
-              <tr class="${member.currentCalling ? "interview-row-calling" : ""}">
+              <tr class="${getInterviewCallStatus(member) === "叫號中" ? "interview-row-calling" : ""}">
                 <td>
                   <input
                     type="checkbox"
                     class="interview-row-checkbox"
                     value="${escapeHtml(member.uuid)}"
                     ${selectedInterviewUuids.has(member.uuid) ? "checked" : ""}
-                    onchange="toggleInterviewSelection('${member.uuid}', this.checked)"
+                    ${isInterviewSelectable(member) ? "" : "disabled"}
+                    onchange="toggleInterviewSelection('${escapeHtml(member.uuid)}', this.checked)"
                   />
                 </td>
-                <td>${escapeHtml(member.activityNumber || "-")}</td>
+                <td>${escapeHtml(getInterviewRegistrationNumber(member))}</td>
                 <td>${escapeHtml(member.name || "-")}</td>
+                <td>${escapeHtml(maskIdNumber(member.idNumber || member.identityNumber || ""))}</td>
                 <td>${escapeHtml(member.location || "-")}</td>
-                <td>${escapeHtml(formatInterviewTimeRange(member))}</td>
-                <td>${renderStatusBadge(member.checkinStatus)}</td>
-                <td>${member.currentCalling ? "叫號中" : "-"}</td>
-                <td>${renderInterviewBadge(member.interviewStatus)}</td>
-                <td>${escapeHtml(formatDateTime(member.checkinTime))}</td>
+                <td>${renderStatusBadge(getInterviewCheckinStatus(member))}</td>
+                <td>${renderInterviewCallBadge(member)}</td>
+                <td>${renderInterviewBadge(getInterviewProcessStatus(member))}</td>
+                <td>${escapeHtml(formatInterviewDateTime(member.checkinTime))}</td>
+                <td>${escapeHtml(formatInterviewDateTime(member.finishTime))}</td>
+                <td>${renderInterviewActions(member)}</td>
               </tr>
             `,
           )
           .join("");
 
         updateInterviewSelectionUI();
+        renderInterviewPagination();
       }
 
       function renderInterviewLoading() {
@@ -2483,7 +2929,7 @@
             .fill(
               `
                 <tr class="skeleton-row">
-                  <td colspan="9"><div class="skeleton-box w-70"></div></td>
+                  <td colspan="11"><div class="skeleton-box w-70"></div></td>
                 </tr>
               `,
             )
@@ -2498,9 +2944,10 @@
 
         document.getElementById("interviewTableBody").innerHTML = `
           <tr>
-            <td colspan="9" class="empty-cell">${escapeHtml(message)}</td>
+            <td colspan="11" class="empty-cell">${escapeHtml(message)}</td>
           </tr>
         `;
+        document.getElementById("interviewPagination").innerHTML = "";
         updateInterviewSelectionUI();
       }
 
@@ -2515,12 +2962,12 @@
       }
 
       function toggleAllInterviewSelection(checked) {
+        const selectableMembers = filteredInterviewMembers.filter(isInterviewSelectable);
+
         if (checked) {
-          filteredInterviewMembers
-            .filter((member) => !isInterviewCompletedRecord(member))
-            .forEach((member) => selectedInterviewUuids.add(member.uuid));
+          selectableMembers.forEach((member) => selectedInterviewUuids.add(member.uuid));
         } else {
-          filteredInterviewMembers.forEach((member) =>
+          selectableMembers.forEach((member) =>
             selectedInterviewUuids.delete(member.uuid),
           );
         }
@@ -2539,23 +2986,30 @@
         const selectAll = document.getElementById("interviewSelectAll");
 
         if (countEl) {
-          countEl.innerText = `已選 ${selectedInterviewUuids.size} 人`;
+          countEl.innerText = `已選 ${selectedInterviewUuids.size} 人｜共 ${filteredInterviewMembers.length} 筆｜流程：已報到 → 叫號中 → 面試中 → 面試完成`;
         }
 
         if (selectAll) {
-          const selectable = filteredInterviewMembers.filter(
-            (member) => !isInterviewCompletedRecord(member),
-          );
+          const selectable = filteredInterviewMembers.filter(isInterviewSelectable);
           selectAll.checked =
             selectable.length > 0 &&
             selectable.every((member) => selectedInterviewUuids.has(member.uuid));
+          selectAll.indeterminate =
+            selectable.length > 0 &&
+            selectable.some((member) => selectedInterviewUuids.has(member.uuid)) &&
+            !selectAll.checked;
         }
       }
 
       function getSelectedInterviewMembers() {
-        return currentInterviewMembers.filter((member) =>
-          selectedInterviewUuids.has(member.uuid),
+        return currentInterviewMembers.filter(
+          (member) =>
+            selectedInterviewUuids.has(member.uuid) && isInterviewSelectable(member),
         );
+      }
+
+      function isInterviewSelectable(member) {
+        return isCheckedInRecord(member) && !isInterviewCompletedRecord(member);
       }
 
       function formatInterviewTimeRange(member) {
@@ -2567,13 +3021,301 @@
         return `${start} - ${end}`;
       }
 
+      function getInterviewTimeSlot(member) {
+        return formatInterviewTimeRange(member);
+      }
+
+      function getInterviewRegistrationNumber(member) {
+        return String(
+          member.registrationNumber ||
+            member.serialNumber ||
+            member.activityNumber ||
+            member.sequence ||
+            member.number ||
+            member.uuid ||
+            "-",
+        );
+      }
+
+      function getInterviewCheckinStatus(member) {
+        if (!isCheckedInRecord(member) && isCheckinNotStarted(member)) {
+          return "尚未開始報到";
+        }
+
+        if (isCheckedInRecord(member) && isLateCheckin(member, member.checkinTime)) {
+          return "遲到報到";
+        }
+
+        if (isCheckedInRecord(member)) return "已報到";
+        return "未報到";
+      }
+
+      function getInterviewCallStatus(member) {
+        if (isInterviewCompletedRecord(member)) return "已完成";
+
+        const currentCalling = String(member.currentCalling || "").trim();
+
+        if (currentCalling && currentCalling !== "未叫號" && currentCalling !== "-") {
+          return "叫號中";
+        }
+
+        return "未叫號";
+      }
+
+      function getInterviewProcessStatus(member) {
+        if (isInterviewCompletedRecord(member)) return "完成";
+
+        const status = String(member.interviewStatus || "").trim();
+
+        if (status === "面試中" || status === "進行中") return "面試中";
+        if (getInterviewCallStatus(member) === "叫號中") return "面試中";
+
+        return "未開始";
+      }
+
+      function renderInterviewCallBadge(member) {
+        const status = getInterviewCallStatus(member);
+        const className =
+          status === "叫號中"
+            ? "status-warning"
+            : status === "已完成"
+              ? "status-primary"
+              : "status-gray";
+
+        return `
+          <span class="status-badge ${className}">
+            ${escapeHtml(status)}
+          </span>
+        `;
+      }
+
+      function maskIdNumber(idNumber) {
+        const value = String(idNumber || "").trim();
+
+        if (!value) return "-";
+        if (value.length <= 4) return value;
+
+        return `${value.slice(0, 2)}${"*".repeat(Math.max(value.length - 5, 3))}${value.slice(-3)}`;
+      }
+
+      function formatInterviewDateTime(datetime) {
+        if (!datetime) return "-";
+
+        const date = new Date(datetime);
+
+        if (Number.isNaN(date.getTime())) return "-";
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const hour = String(date.getHours()).padStart(2, "0");
+        const minute = String(date.getMinutes()).padStart(2, "0");
+
+        return `${year}-${month}-${day} ${hour}:${minute}`;
+      }
+
+      function renderInterviewActions(member) {
+        const uuid = escapeHtml(member.uuid || "");
+        const isGuest = isGuestMode();
+        const checkedIn = isCheckedInRecord(member);
+        const completed = isInterviewCompletedRecord(member);
+        const called = getInterviewCallStatus(member) === "叫號中";
+
+        return `
+          <div class="interview-actions">
+            <button
+              class="btn btn-primary btn-sm"
+              onclick="callInterviewMember('${uuid}', this)"
+              ${isGuest || !checkedIn || called || completed ? "disabled" : ""}
+            >
+              叫號
+            </button>
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              onclick="cancelInterviewCalling('${uuid}', this)"
+              ${isGuest || !called || completed ? "disabled" : ""}
+            >
+              取消叫號
+            </button>
+            <button
+              class="btn btn-outline-success btn-sm"
+              onclick="completeInterviewMember('${uuid}', this)"
+              ${isGuest || completed || !called ? "disabled" : ""}
+            >
+              完成
+            </button>
+          </div>
+        `;
+      }
+
+      function isGuestMode() {
+        const user = window.currentUser || JSON.parse(localStorage.getItem("currentUser") || "{}");
+        return user.role === "guest";
+      }
+
+      function ensureInterviewOperator() {
+        if (isGuestMode()) {
+          showToast("訪客模式僅可查看系統總覽，無法操作", "error");
+          return false;
+        }
+
+        return true;
+      }
+
+      function findInterviewMember(uuid) {
+        return currentInterviewMembers.find((member) => member.uuid === uuid);
+      }
+
+      function setButtonLoading(btn, text) {
+        if (!btn) return;
+
+        btn.dataset.originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = text;
+      }
+
+      function restoreInterviewTable() {
+        renderInterviewSummary();
+        renderInterviewTable();
+      }
+
+      function getInterviewPageMembers() {
+        const start = (currentInterviewPage - 1) * interviewPageSize;
+        const end = start + interviewPageSize;
+
+        return filteredInterviewMembers.slice(start, end);
+      }
+
+      function clampInterviewPage() {
+        const totalPages = getInterviewTotalPages();
+
+        if (currentInterviewPage > totalPages) currentInterviewPage = totalPages;
+        if (currentInterviewPage < 1) currentInterviewPage = 1;
+      }
+
+      function getInterviewTotalPages() {
+        return Math.max(1, Math.ceil(filteredInterviewMembers.length / interviewPageSize));
+      }
+
+      function changeInterviewPage(page) {
+        const pageNum = Number(page);
+        const totalPages = getInterviewTotalPages();
+
+        if (!Number.isFinite(pageNum) || pageNum < 1 || pageNum > totalPages) return;
+
+        currentInterviewPage = pageNum;
+        renderInterviewTable();
+      }
+
+      function gotoInterviewPage(page) {
+        changeInterviewPage(Number(page));
+      }
+
+      function changeInterviewPageSize(value) {
+        interviewPageSize = Number(value) || 10;
+        clampInterviewPage();
+        renderInterviewTable();
+      }
+
+      function renderInterviewPagination() {
+        const container = document.getElementById("interviewPagination");
+        const totalPages = getInterviewTotalPages();
+
+        container.innerHTML = `
+          <button
+            class="page-btn"
+            onclick="changeInterviewPage(${currentInterviewPage - 1})"
+            ${currentInterviewPage === 1 ? "disabled" : ""}
+          >
+            上一頁
+          </button>
+          <div class="page-info">
+            <span>第</span>
+            <input
+              type="number"
+              class="page-input"
+              min="1"
+              max="${totalPages}"
+              value="${currentInterviewPage}"
+              onchange="gotoInterviewPage(this.value)"
+            >
+            <span>頁，共 ${totalPages} 頁</span>
+          </div>
+          <button
+            class="page-btn"
+            onclick="changeInterviewPage(${currentInterviewPage + 1})"
+            ${currentInterviewPage === totalPages ? "disabled" : ""}
+          >
+            下一頁
+          </button>
+        `;
+      }
+
+      async function autoCompleteExpiredInterviews() {
+        const expiredMembers = currentInterviewMembers.filter(
+          (member) =>
+            isInterviewPastEnd(member) &&
+            getInterviewCallStatus(member) !== "未叫號" &&
+            !isInterviewCompletedRecord(member),
+        );
+
+        if (expiredMembers.length === 0) return;
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "batchUpdateInterviewStatus",
+              uuids: expiredMembers.map((member) => member.uuid),
+              interviewStatus: "已完成",
+              operator: "系統自動",
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!result.success) {
+            console.warn("自動完成面試失敗", result.message || result);
+            return;
+          }
+
+          const finishTime = result.finishTime || new Date();
+
+          expiredMembers.forEach((member) => {
+            member.interviewStatus = "已完成";
+            member.finishTime = finishTime;
+            member.currentCalling = "";
+          });
+        } catch (err) {
+          console.warn("自動完成面試失敗", err);
+        }
+      }
+
+      function isInterviewPastEnd(member, now = new Date()) {
+        if (!member?.activityEndTime) return false;
+
+        const endTime = parseFrontDateTime(member.date, member.activityEndTime);
+        const currentTime = new Date(now);
+
+        if (Number.isNaN(endTime.getTime()) || Number.isNaN(currentTime.getTime())) {
+          return false;
+        }
+
+        return currentTime > endTime;
+      }
+
       async function batchCallInterviewMembers() {
+        if (!ensureInterviewOperator()) return;
+
         const selected = getSelectedInterviewMembers().filter(
-          (member) => !isInterviewCompletedRecord(member),
+          (member) => getInterviewCallStatus(member) === "未叫號",
         );
 
         if (selected.length === 0) {
-          showToast("請先勾選要叫號的人員", "error");
+          showToast("請先勾選已報到且尚未叫號的人員", "error");
           return;
         }
 
@@ -2600,11 +3342,9 @@
             return;
           }
 
-          currentInterviewMembers.forEach((member) => {
-            if (selected.some((item) => item.uuid === member.uuid)) {
-              member.currentCalling = "叫號中";
-              member.interviewStatus = "進行中";
-            }
+          selected.forEach((member) => {
+            member.currentCalling = "叫號中";
+            member.interviewStatus = "面試中";
           });
 
           selectedInterviewUuids.clear();
@@ -2616,11 +3356,157 @@
         }
       }
 
+      async function callInterviewMember(uuid, btn = null) {
+        const member = findInterviewMember(uuid);
+
+        if (!member) return;
+
+        if (!ensureInterviewOperator()) return;
+
+        if (!isCheckedInRecord(member)) {
+          showToast("未報到考生不可叫號", "error");
+          return;
+        }
+
+        if (isInterviewCompletedRecord(member)) {
+          showToast("面試已完成，狀態已鎖定", "error");
+          return;
+        }
+
+        if (getInterviewCallStatus(member) === "叫號中") {
+          showToast("此考生已在叫號中，狀態不可回退", "error");
+          return;
+        }
+
+        try {
+          const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
+          setButtonLoading(btn, "處理中...");
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "batchSetCurrentCalling",
+              uuids: [uuid],
+              activityCode: currentInterviewActivityCode,
+              operator: currentUser.name || "",
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!result.success) {
+            showToast(result.message || "叫號失敗", "error");
+            return;
+          }
+
+          member.currentCalling = "叫號中";
+          member.interviewStatus = "面試中";
+
+          filterInterviewMembers();
+          showToast(`已叫號：${member.name || getInterviewRegistrationNumber(member)}`, "success");
+        } catch (err) {
+          console.error(err);
+          showToast("叫號失敗，請確認網路", "error");
+        } finally {
+          restoreInterviewTable();
+        }
+      }
+
+      async function cancelInterviewCalling(uuid, btn = null) {
+        const member = findInterviewMember(uuid);
+
+        if (!member) return;
+
+        if (!ensureInterviewOperator()) return;
+
+        if (isInterviewCompletedRecord(member)) {
+          showToast("面試已完成，狀態已鎖定", "error");
+          return;
+        }
+
+        if (getInterviewCallStatus(member) === "未叫號") {
+          showToast("此考生目前未叫號", "error");
+          return;
+        }
+
+        if (!confirm(`確認取消 ${member.name || "此考生"} 的叫號？`)) return;
+
+        try {
+          const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
+          setButtonLoading(btn, "處理中...");
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "cancelCurrentCalling",
+              uuid,
+              operator: currentUser.name || "",
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!result.success) {
+            showToast(result.message || "取消叫號失敗", "error");
+            return;
+          }
+
+          resetInterviewCallingState(member);
+
+          selectedInterviewUuids.delete(uuid);
+          filterInterviewMembers();
+          showToast(`已取消叫號：${member.name || getInterviewRegistrationNumber(member)}`, "success");
+        } catch (err) {
+          console.error(err);
+          showToast("取消叫號失敗，請確認網路", "error");
+        } finally {
+          restoreInterviewTable();
+        }
+      }
+
+      async function cancelInterviewCallingSilently(uuid, operator = "") {
+        try {
+          await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "cancelCurrentCalling",
+              uuid,
+              operator,
+            }),
+          });
+        } catch (err) {
+          console.warn("同步取消叫號失敗", err);
+        }
+      }
+
+      function resetInterviewCallingState(member) {
+        if (!member) return;
+
+        member.currentCalling = "";
+        member.interviewStatus = "未開始";
+        member.finishTime = "";
+      }
+
       async function batchCompleteInterviewMembers() {
-        const selected = getSelectedInterviewMembers();
+        if (!ensureInterviewOperator()) return;
+
+        const selected = getSelectedInterviewMembers().filter(
+          (member) => getInterviewCallStatus(member) !== "未叫號",
+        );
 
         if (selected.length === 0) {
-          showToast("請先勾選面試完成的人員", "error");
+          showToast("請先勾選已叫號或面試中的人員", "error");
           return;
         }
 
@@ -2649,20 +3535,195 @@
 
           const finishTime = result.finishTime || new Date();
 
-          currentInterviewMembers.forEach((member) => {
-            if (selected.some((item) => item.uuid === member.uuid)) {
-              member.interviewStatus = "已完成";
-              member.finishTime = finishTime;
-              member.currentCalling = "";
-            }
+          selected.forEach((member) => {
+            member.interviewStatus = "已完成";
+            member.finishTime = finishTime;
+            member.currentCalling = "";
           });
 
           selectedInterviewUuids.clear();
           filterInterviewMembers();
-          showToast(`已完成 ${selected.length} 人面試`, "success");
+          showToast(`已批次完成 ${selected.length} 人面試`, "success");
         } catch (err) {
           console.error(err);
           showToast("批次完成失敗，請確認網路", "error");
+        }
+      }
+
+      async function batchCancelInterviewCalling() {
+        if (!ensureInterviewOperator()) return;
+
+        const selected = getSelectedInterviewMembers().filter(
+          (member) => getInterviewCallStatus(member) === "叫號中",
+        );
+
+        if (selected.length === 0) {
+          showToast("請先勾選叫號中的人員", "error");
+          return;
+        }
+
+        if (!confirm(`確認批次取消 ${selected.length} 人的叫號？`)) return;
+
+        try {
+          const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
+          const results = await Promise.all(
+            selected.map((member) =>
+              fetch(API_URL, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "text/plain;charset=utf-8",
+                },
+                body: JSON.stringify({
+                  action: "cancelCurrentCalling",
+                  uuid: member.uuid,
+                  operator: currentUser.name || "",
+                }),
+              }).then((response) => response.json()),
+            ),
+          );
+
+          const failed = results.filter((result) => !result.success);
+
+          if (failed.length > 0) {
+            showToast(`批次取消叫號失敗 ${failed.length} 人`, "error");
+          }
+
+          selected.forEach(resetInterviewCallingState);
+          selectedInterviewUuids.clear();
+          filterInterviewMembers();
+
+          if (failed.length === 0) {
+            showToast(`已批次取消 ${selected.length} 人叫號`, "success");
+          }
+        } catch (err) {
+          console.error(err);
+          showToast("批次取消叫號失敗，請確認網路", "error");
+        }
+      }
+
+      async function completeInterviewMember(uuid, btn = null) {
+        const member = findInterviewMember(uuid);
+
+        if (!member) return;
+
+        if (!ensureInterviewOperator()) return;
+
+        if (isInterviewCompletedRecord(member)) {
+          showToast("面試已完成，狀態已鎖定", "error");
+          return;
+        }
+
+        if (getInterviewCallStatus(member) === "未叫號") {
+          showToast("此考生尚未叫號，無法完成面試", "error");
+          return;
+        }
+
+        try {
+          const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
+          setButtonLoading(btn, "處理中...");
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "batchUpdateInterviewStatus",
+              uuids: [uuid],
+              interviewStatus: "已完成",
+              operator: currentUser.name || "",
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!result.success) {
+            showToast(result.message || "完成面試失敗", "error");
+            return;
+          }
+
+          const finishTime = result.finishTime || new Date();
+
+          member.interviewStatus = "已完成";
+          member.finishTime = finishTime;
+          member.currentCalling = "";
+
+          filterInterviewMembers();
+          showToast(`已完成面試：${member.name || getInterviewRegistrationNumber(member)}`, "success");
+        } catch (err) {
+          console.error(err);
+          showToast("完成面試失敗，請確認網路", "error");
+        } finally {
+          restoreInterviewTable();
+        }
+      }
+
+      async function checkinInterviewMember(uuid, btn = null) {
+        const member = findInterviewMember(uuid);
+
+        if (!member) return;
+
+        if (!ensureInterviewOperator()) return;
+
+        if (isCheckedInRecord(member)) {
+          showToast("此考生已報到", "error");
+          return;
+        }
+
+        if (isCheckinNotStarted(member)) {
+          showToast("尚未開始報到", "error");
+          return;
+        }
+
+        if (!confirm("確認完成報到？")) return;
+
+        try {
+          const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
+          setButtonLoading(btn, "處理中...");
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "checkinMember",
+              uuid,
+              operator: currentUser.name || "",
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!result.success) {
+            showToast(result.message || "報到失敗", "error");
+            return;
+          }
+
+          member.checkinTime = result.checkinTime || new Date();
+          member.absent = "";
+          member.interviewStatus = member.interviewStatus || "未開始";
+
+          if (isLateCheckin(member, member.checkinTime)) {
+            member.checkinStatus = "遲到報到";
+            member.note = "遲到";
+          } else {
+            member.checkinStatus = "已報到";
+            member.note = "";
+          }
+
+          await writeCheckinLog("報到", member, currentUser.name || "");
+
+          filterInterviewMembers();
+          showToast(`報到成功：${member.name || getInterviewRegistrationNumber(member)}`, "success");
+        } catch (err) {
+          console.error(err);
+          showToast("報到失敗，請確認網路", "error");
+        } finally {
+          restoreInterviewTable();
         }
       }
 
@@ -2686,30 +3747,6 @@
             <div class="admin-settings-row">
               <span>帳號</span>
               <strong>${escapeHtml(currentUser.account || "-")}</strong>
-            </div>
-          </div>
-
-          <div class="admin-settings-card">
-            <div class="admin-settings-title">資料表狀態</div>
-            <div class="admin-settings-row">
-              <span>活動主表</span>
-              <strong>已串接</strong>
-            </div>
-            <div class="admin-settings-row">
-              <span>活動人員資料</span>
-              <strong>已串接</strong>
-            </div>
-            <div class="admin-settings-row">
-              <span>報到紀錄</span>
-              <strong>需部署 Apps Script action</strong>
-            </div>
-          </div>
-
-          <div class="admin-settings-card">
-            <div class="admin-settings-title">管理提醒</div>
-            <div class="admin-settings-note">
-              目前前端已支援活動管理、報到開關、報到紀錄查詢與現場報到同步。
-              若要新增帳號管理、刪除活動或匯入名單，需要 Apps Script 增加對應 action。
             </div>
           </div>
         `;
@@ -3009,6 +4046,7 @@
 
         // table loading
 
+        renderCheckinSummaryLoading();
         renderCheckinLoading();
 
         try {
@@ -3271,20 +4309,36 @@
                   <td>
                       ${escapeHtml(formatTime(member.checkinEndTime))}
                   </td>
-                  <td>
+                  <td class="checkin-status-cell">
 
           <span class="
+              desktop-status-badge
               status-badge
-              ${getCheckinStatusClass(member.checkinStatus)}
+              ${getCheckinStatusClass(getDisplayCheckinStatus(member))}
           ">
 
-              ${escapeHtml(member.checkinStatus || "-")}
+              ${escapeHtml(getDisplayCheckinStatus(member))}
 
           </span>
 
+          <div class="mobile-status-panel">
+            <div class="mobile-status-row">
+              <span>報到狀態</span>
+              ${renderStatusBadge(getDisplayCheckinStatus(member))}
+            </div>
+            <div class="mobile-status-row">
+              <span>面試狀態</span>
+              ${renderInterviewBadge(member.interviewStatus)}
+            </div>
+            <div class="mobile-status-row">
+              <span>目前叫號</span>
+              <strong>${escapeHtml(member.currentCalling ? "叫號中" : "-")}</strong>
+            </div>
+          </div>
+
       </td>
 
-      <td>
+      <td class="desktop-status-col">
 
           <span class="
               status-badge
@@ -3299,7 +4353,7 @@
 
 
 
-                  <td>
+                  <td class="desktop-status-col">
                       ${member.currentCalling ? "叫號中" : "-"}
                   </td>
 
@@ -3340,9 +4394,8 @@
                   <td>
 
           ${
-            isCheckedInRecord(member)
+            canCancelCheckin(member)
               ? `
-
               <button
 
                 class="
@@ -3363,7 +4416,25 @@
               </button>
 
               `
-              : `
+              : isCheckinNotStarted(member)
+                ? `
+
+              <button
+
+                class="
+                  btn
+                  btn-secondary
+                  btn-sm
+                "
+
+                disabled>
+
+                尚未開始
+
+              </button>
+
+              `
+                : `
 
               <button
 
@@ -3408,9 +4479,55 @@
         return classes.join(" ");
       }
 
+      function canCancelCheckin(member) {
+        return isCheckedInRecord(member);
+      }
+
+      function keepCheckinMemberVisible(uuid) {
+        const statusFilter = document.getElementById("checkinStatusFilter");
+
+        if (
+          statusFilter &&
+          ["未報到", "尚未開始報到", "缺考"].includes(statusFilter.value)
+        ) {
+          statusFilter.value = "";
+        }
+
+        applyCheckinFilters(false);
+
+        const index = filteredCheckinMembers.findIndex(
+          (member) => member.uuid === uuid,
+        );
+
+        if (index >= 0) {
+          currentCheckinPage = Math.floor(index / CHECKIN_PAGE_SIZE) + 1;
+        }
+      }
+
+      async function ensureDefaultInterviewActivity() {
+        const select = document.getElementById("interviewActivitySelect");
+
+        if (!select || currentInterviewActivityCode || select.value) return;
+        if (interviewActivitiesCache.length === 0) return;
+
+        const defaultActivity =
+          interviewActivitiesCache.find((activity) => isTodayActivity(activity)) ||
+          interviewActivitiesCache[0];
+
+        select.value = defaultActivity.code || defaultActivity.activityCode || "";
+
+        if (select.value) {
+          await loadInterviewMembers();
+        }
+      }
+
+      function isTodayActivity(activity) {
+        return formatDate(activity.date) === getTaipeiDateString();
+      }
+
       function getFirstActionableMemberUuid() {
         const first = filteredCheckinMembers.find(
-          (member) => !isCheckedInRecord(member) && !isAbsentRecord(member),
+          (member) => !isCheckedInRecord(member),
         );
 
         return first?.uuid || "";
@@ -3424,7 +4541,7 @@
           isInterviewCompletedRecord,
         ).length;
         const unchecked = currentCheckinMembers.filter(
-          (member) => !isCheckedInRecord(member) && !isAbsentRecord(member),
+          (member) => !isCheckedInRecord(member),
         ).length;
 
         document.getElementById("checkinSummary").innerHTML = `
@@ -3574,6 +4691,13 @@ function renderPagination() {
       ========================= */
 
       async function checkinMember(uuid, btn = null) {
+        const targetMember = currentCheckinMembers.find((item) => item.uuid === uuid);
+
+        if (targetMember && isCheckinNotStarted(targetMember)) {
+          showToast("尚未開始報到", "error");
+          return;
+        }
+
         // 確認
 
         const confirmCheckin = confirm("確認完成報到？");
@@ -3628,23 +4752,15 @@ function renderPagination() {
             );
 
             if (member) {
-              member.checkinStatus = "已報到";
-
-              member.checkinTime = result.checkinTime;
+              member.checkinTime = result.checkinTime || new Date();
 
               // 判斷遲到
 
-              const now = new Date();
-
-              const endTime = parseFrontDateTime(
-                member.date,
-
-                member.checkinEndTime,
-              );
-
-              if (now > endTime) {
-                member.note = "遲到報到";
+              if (isLateCheckin(member, member.checkinTime)) {
+                member.checkinStatus = "遲到報到";
+                member.note = "遲到";
               } else {
+                member.checkinStatus = "已報到";
                 member.note = "";
               }
 
@@ -3659,7 +4775,7 @@ function renderPagination() {
                      即時更新畫面
                   ========================= */
 
-            applyCheckinFilters(false);
+            keepCheckinMemberVisible(uuid);
             renderCheckinTable();
 
             /* =========================
@@ -3701,6 +4817,7 @@ function renderPagination() {
 
       async function cancelCheckin(uuid, btn = null) {
         const member = currentCheckinMembers.find((item) => item.uuid === uuid);
+
         const confirmCancel = confirm(
           `確認取消 ${member?.name || "此人員"} 的報到紀錄？`,
         );
@@ -3753,6 +4870,7 @@ function renderPagination() {
             const member = currentCheckinMembers.find(
               (item) => item.uuid === uuid,
             );
+            const wasCalling = member && getInterviewCallStatus(member) !== "未叫號";
 
             if (member) {
               // 清空狀態
@@ -3766,6 +4884,14 @@ function renderPagination() {
               member.absent = "";
 
               member.interviewStatus = "未開始";
+
+              member.currentCalling = "";
+
+              member.finishTime = "";
+            }
+
+            if (wasCalling) {
+              await cancelInterviewCallingSilently(uuid, currentUser.name);
             }
 
             await writeCheckinLog("取消報到", member, currentUser.name);
@@ -3920,7 +5046,8 @@ function renderPagination() {
         const checkinStatuses = [
           ...new Set(
             members
-              .map((member) => member.checkinStatus)
+              .map(getDisplayCheckinStatus)
+              .filter((status) => status !== "-")
               .filter((status) => status),
           ),
         ];
@@ -4014,7 +5141,7 @@ function renderPagination() {
 
         if (checkinStatus !== "") {
           filtered = filtered.filter(
-            (member) => member.checkinStatus === checkinStatus,
+            (member) => getDisplayCheckinStatus(member) === checkinStatus,
           );
         }
 
@@ -4050,11 +5177,6 @@ function renderPagination() {
 
           if (locationCompare !== 0) return locationCompare;
 
-          const aDone = isCheckedInRecord(a) || isAbsentRecord(a);
-          const bDone = isCheckedInRecord(b) || isAbsentRecord(b);
-
-          if (aDone !== bDone) return aDone ? 1 : -1;
-
           return String(a.activityNumber || "").localeCompare(
             String(b.activityNumber || ""),
             "zh-Hant",
@@ -4067,7 +5189,7 @@ function renderPagination() {
         if (event.key !== "Enter") return;
 
         const first = filteredCheckinMembers.find(
-          (member) => !isCheckedInRecord(member) && !isAbsentRecord(member),
+          (member) => !isCheckedInRecord(member),
         );
 
         if (!first) {
@@ -4111,27 +5233,90 @@ function renderPagination() {
       function parseFrontDateTime(dateStr, timeStr) {
         if (!timeStr) return new Date();
 
-        timeStr = String(timeStr);
+        const datePart = String(dateStr || "").replaceAll("-", "/");
+
+        if (timeStr instanceof Date) {
+          const hour = timeStr.getHours();
+          const minute = timeStr.getMinutes();
+          return new Date(`${datePart} ${hour}:${minute}:00`);
+        }
+
+        timeStr = String(timeStr).trim();
+
+        const parsedTimeDate = new Date(timeStr);
+
+        if (!Number.isNaN(parsedTimeDate.getTime()) && /\d{4}/.test(timeStr)) {
+          return new Date(
+            `${datePart} ${parsedTimeDate.getHours()}:${parsedTimeDate.getMinutes()}:00`,
+          );
+        }
 
         const isPM = timeStr.includes("下午");
+        const isAM = timeStr.includes("上午");
 
         const clean = timeStr.replace("上午", "").replace("下午", "").trim();
 
         let [hour, minute] = clean.split(":");
 
-        hour = parseInt(hour);
+        hour = parseInt(hour, 10);
 
-        minute = parseInt(minute);
+        minute = parseInt(minute || "0", 10);
 
         if (isPM && hour < 12) {
           hour += 12;
         }
 
-        if (!isPM && hour === 12) {
+        if (isAM && hour === 12) {
           hour = 0;
         }
 
-        return new Date(`${dateStr} ${hour}:${minute}:00`);
+        return new Date(`${datePart} ${hour}:${minute}:00`);
+      }
+
+      function isLateCheckin(member, checkinTime = new Date()) {
+        if (!member?.checkinEndTime) return false;
+
+        const endTime = parseFrontDateTime(member.date, member.checkinEndTime);
+        const actualCheckinTime = new Date(checkinTime);
+
+        if (Number.isNaN(endTime.getTime()) || Number.isNaN(actualCheckinTime.getTime())) {
+          return false;
+        }
+
+        return actualCheckinTime > endTime;
+      }
+
+      function isCheckinNotStarted(member, now = new Date()) {
+        if (!member?.checkinStartTime || isCheckedInRecord(member)) return false;
+
+        const startTime = parseFrontDateTime(member.date, member.checkinStartTime);
+        const currentTime = new Date(now);
+
+        if (Number.isNaN(startTime.getTime()) || Number.isNaN(currentTime.getTime())) {
+          return false;
+        }
+
+        return currentTime < startTime;
+      }
+
+      function getDisplayCheckinStatus(member) {
+        if (isCheckinNotStarted(member)) {
+          return "尚未開始報到";
+        }
+
+        const status = String(member?.checkinStatus || "");
+        const note = String(member?.note || "");
+
+        if (
+          status === "遲到報到" ||
+          status === "報到遲到" ||
+          note.includes("遲到") ||
+          (isCheckedInRecord(member) && isLateCheckin(member, member.checkinTime))
+        ) {
+          return "遲到報到";
+        }
+
+        return status || "-";
       }
 
       /* =========================
@@ -4144,12 +5329,14 @@ function renderPagination() {
             return "status-success";
 
           case "遲到報到":
+          case "報到遲到":
             return "status-warning";
 
           case "未報到":
             return "status-danger";
 
           case "尚未開放報到":
+          case "尚未開始報到":
             return "status-info";
 
           default:
@@ -4183,9 +5370,11 @@ function renderPagination() {
       function getInterviewStatusClass(status) {
         switch (status) {
           case "已完成":
+          case "完成":
             return "status-primary";
 
           case "進行中":
+          case "面試中":
             return "status-warning";
 
           case "未開始":
@@ -4303,10 +5492,63 @@ function renderPagination() {
           populateRecordFilters(data);
           setRecordFilters(filters);
           filterCheckinRecords();
+          await loadRecordCurrentStats();
         } catch (err) {
           console.error(err);
 
           showToast("載入報到紀錄失敗", "error");
+        }
+      }
+
+      async function loadRecordCurrentStats() {
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+            body: JSON.stringify({
+              action: "getActivities",
+            }),
+          });
+
+          const result = await response.json();
+          const activities = result.data || [];
+          const activityCodes = [
+            ...new Set(
+              activities
+                .map((activity) => activity.code || activity.activityCode)
+                .filter(Boolean),
+            ),
+          ];
+
+          const memberGroups = await Promise.all(
+            activityCodes.map(async (activityCode) => {
+              const membersResponse = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "text/plain;charset=utf-8",
+                },
+                body: JSON.stringify({
+                  action: "getCheckinMembers",
+                  activityCode,
+                }),
+              });
+
+              const membersResult = await membersResponse.json();
+
+              return (membersResult.data || []).map((member) => ({
+                ...member,
+                activityCode: member.activityCode || activityCode,
+              }));
+            }),
+          );
+
+          recordCurrentMembersCache = memberGroups.flat();
+          updateCurrentRecordSummary(recordCurrentMembersCache);
+        } catch (err) {
+          console.warn("目前狀態統計載入失敗，暫用報到紀錄統計", err);
+          updateLogSummary(filteredCheckinRecords);
         }
       }
 
@@ -4316,22 +5558,24 @@ function renderPagination() {
 
       function renderCheckinLogs(data) {
         const tbody = document.getElementById("checkinRecordsTable");
+        const pageData = getRecordPageItems(data);
 
         if (data.length === 0) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="9" class="empty-cell">
+              <td colspan="8" class="empty-cell">
                 尚無報到紀錄
               </td>
             </tr>
           `;
 
+          renderRecordPagination(data);
           return;
         }
 
         let previousGroup = "";
 
-        tbody.innerHTML = data
+        tbody.innerHTML = pageData
           .map((item) => {
             const groupKey = getRecordGroupKey(item);
             const showGroupHeader = groupKey !== previousGroup;
@@ -4343,7 +5587,7 @@ function renderPagination() {
             showGroupHeader
               ? `
                 <tr class="record-group-row">
-                  <td colspan="9">
+                  <td colspan="8">
                     ${escapeHtml(getRecordGroupLabel(item))}
                   </td>
                 </tr>
@@ -4365,13 +5609,9 @@ function renderPagination() {
               ${renderStatusBadge(getRecordStatus(item))}
             </td>
 
-            <td>
-              ${renderInterviewBadge(getLogValue(item, "interviewStatus", "面試狀態"))}
-            </td>
-
             <td>${escapeHtml(formatRecordDateTime(getLogValue(item, "checkinTime", "報到時間")))}</td>
 
-            <td>${escapeHtml(getLogValue(item, "note", "備註") || "-")}</td>
+            <td>${escapeHtml(getRecordNote(item))}</td>
 
             <td>${escapeHtml(getLogValue(item, "operator", "checkinOperator", "操作人員") || "-")}</td>
 
@@ -4379,6 +5619,97 @@ function renderPagination() {
 
         `;
           })
+          .join("");
+
+        renderRecordPagination(data);
+      }
+
+      function getRecordPageItems(data) {
+        const start = (currentRecordPage - 1) * RECORD_PAGE_SIZE;
+        const end = start + RECORD_PAGE_SIZE;
+
+        return data.slice(start, end);
+      }
+
+      function getRecordTotalPages() {
+        return Math.max(1, Math.ceil(filteredCheckinRecords.length / RECORD_PAGE_SIZE));
+      }
+
+      function clampRecordPage() {
+        const totalPages = getRecordTotalPages();
+
+        if (currentRecordPage > totalPages) currentRecordPage = totalPages;
+        if (currentRecordPage < 1) currentRecordPage = 1;
+      }
+
+      function changeRecordPage(page) {
+        const pageNum = Number(page);
+        const totalPages = getRecordTotalPages();
+
+        if (!Number.isFinite(pageNum) || pageNum < 1 || pageNum > totalPages) return;
+
+        currentRecordPage = pageNum;
+        renderCheckinLogs(filteredCheckinRecords);
+      }
+
+      function gotoRecordPage(page) {
+        changeRecordPage(Number(page));
+      }
+
+      function renderRecordPagination(data) {
+        const container = document.getElementById("recordPaginationContainer");
+
+        if (!container) return;
+
+        const totalPages = getRecordTotalPages();
+
+        container.innerHTML = `
+          <button
+            class="page-btn"
+            onclick="changeRecordPage(${currentRecordPage - 1})"
+            ${currentRecordPage === 1 ? "disabled" : ""}
+          >
+            上一頁
+          </button>
+
+          <div class="page-info">
+            <span>第</span>
+            <input
+              type="number"
+              class="page-input"
+              id="recordPageInput"
+              min="1"
+              max="${totalPages}"
+              value="${currentRecordPage}"
+              onchange="gotoRecordPage(this.value)"
+            >
+            <span>頁，共 ${totalPages} 頁</span>
+          </div>
+
+          <button
+            class="page-btn"
+            onclick="changeRecordPage(${currentRecordPage + 1})"
+            ${currentRecordPage === totalPages ? "disabled" : ""}
+          >
+            下一頁
+          </button>
+        `;
+      }
+
+      function renderCheckinSummaryLoading() {
+        const container = document.getElementById("checkinSummary");
+
+        if (!container) return;
+
+        container.innerHTML = Array(5)
+          .fill(
+            `
+              <div class="checkin-summary-card checkin-summary-loading">
+                <div class="skeleton-box w-60"></div>
+                <div class="skeleton-box w-40"></div>
+              </div>
+            `,
+          )
           .join("");
       }
 
@@ -4414,14 +5745,12 @@ function renderPagination() {
 
         const late = data.filter(
           (x) =>
-            getLogValue(x, "note", "備註") === "遲到報到" ||
+            getLogValue(x, "note", "備註").includes("遲到") ||
             getRecordStatus(x) === "遲到報到",
         ).length;
 
         const absent = data.filter(
-          (x) =>
-            getLogValue(x, "absent", "缺考") === "缺考" ||
-            getRecordStatus(x) === "缺考",
+          (x) => getRecordStatus(x) === "缺考",
         ).length;
 
         const interviewDone = data.filter(isInterviewCompletedRecord).length;
@@ -4438,18 +5767,33 @@ function renderPagination() {
           interviewDone;
       }
 
+      function updateCurrentRecordSummary(members) {
+        const totalCheckin = members.filter(isCheckedInRecord).length;
+        const late = members.filter(
+          (member) => getDisplayCheckinStatus(member) === "遲到報到",
+        ).length;
+        const absent = members.filter(
+          (member) => isAbsentRecord(member) && !isCheckedInRecord(member),
+        ).length;
+        const interviewDone = members.filter(isInterviewCompletedRecord).length;
+
+        document.getElementById("recordTotalCheckin").innerText = totalCheckin;
+        document.getElementById("recordLateCount").innerText = late;
+        document.getElementById("recordAbsentCount").innerText = absent;
+        document.getElementById("recordInterviewDoneCount").innerText =
+          interviewDone;
+      }
+
       function filterCheckinRecords() {
         const filters = getRecordFilters();
         const keyword = filters.keyword.trim().toLowerCase();
 
-        const filtered = checkinRecordsCache.filter((item) => {
+        filteredCheckinRecords = checkinRecordsCache.filter((item) => {
           const activityCode = getRecordActivityCode(item);
           const itemDate = formatRecordDate(
             getLogValue(item, "date", "activityDate", "活動日期"),
           );
           const itemStatus = getRecordStatus(item);
-          const interviewStatus =
-            getLogValue(item, "interviewStatus", "面試狀態") || "";
 
           const searchable = [
             getLogValue(item, "name", "姓名"),
@@ -4467,8 +5811,8 @@ function renderPagination() {
           const matchStatus =
             !filters.status ||
             itemStatus === filters.status ||
-            getLogValue(item, "note", "備註") === filters.status ||
-            getLogValue(item, "absent", "缺考") === filters.status;
+            (filters.status === "遲到報到" &&
+              getLogValue(item, "note", "備註").includes("遲到"));
 
           const matchActivity =
             !filters.activity || activityCode === filters.activity;
@@ -4476,20 +5820,25 @@ function renderPagination() {
           const matchDate =
             !filters.date || itemDate === filters.date.replaceAll("-", "/");
 
-          const matchInterview =
-            !filters.interview || interviewStatus === filters.interview;
-
           return (
             matchKeyword &&
             matchStatus &&
             matchActivity &&
-            matchDate &&
-            matchInterview
+            matchDate
           );
         });
 
-        renderCheckinLogs(filtered);
-        updateLogSummary(filtered);
+        currentRecordPage = 1;
+        clampRecordPage();
+        renderCheckinLogs(filteredCheckinRecords);
+
+        if (recordCurrentMembersCache.length > 0) {
+          document.getElementById("recordTotalCount").innerText =
+            filteredCheckinRecords.length;
+          updateCurrentRecordSummary(recordCurrentMembersCache);
+        } else {
+          updateLogSummary(filteredCheckinRecords);
+        }
       }
 
       function getRecordFilters() {
@@ -4498,7 +5847,6 @@ function renderPagination() {
           date: document.getElementById("recordDateFilter")?.value || "",
           activity: document.getElementById("recordActivityFilter")?.value || "",
           status: document.getElementById("recordStatusFilter")?.value || "",
-          interview: document.getElementById("recordInterviewFilter")?.value || "",
         };
       }
 
@@ -4509,8 +5857,6 @@ function renderPagination() {
           filters.activity || "";
         document.getElementById("recordStatusFilter").value =
           filters.status || "";
-        document.getElementById("recordInterviewFilter").value =
-          filters.interview || "";
       }
 
       function populateRecordFilters(data) {
@@ -4520,17 +5866,6 @@ function renderPagination() {
           [...new Set(data.map(getRecordActivityCode).filter(Boolean))],
         );
 
-        populateRecordSelect(
-          "recordInterviewFilter",
-          "全部面試",
-          [
-            ...new Set(
-              data
-                .map((item) => getLogValue(item, "interviewStatus", "面試狀態"))
-                .filter(Boolean),
-            ),
-          ],
-        );
       }
 
       function populateRecordSelect(id, defaultText, values) {
@@ -4563,17 +5898,27 @@ function renderPagination() {
       }
 
       function getRecordStatus(item) {
-        if (getLogValue(item, "absent", "缺考") === "缺考") return "缺考";
-
         const status = getLogValue(item, "checkinStatus", "報到狀態");
+        const note = getLogValue(item, "note", "備註");
+        const checkinTime = getLogValue(item, "checkinTime", "報到時間");
+
+        if (status === "遲到報到" || note.includes("遲到")) return "遲到報到";
 
         if (status) return status;
 
-        if (getLogValue(item, "note", "備註") === "遲到報到") return "遲到報到";
+        if (checkinTime) return "已報到";
 
-        if (getLogValue(item, "checkinTime", "報到時間")) return "已報到";
+        if (getLogValue(item, "absent", "缺考") === "缺考") return "缺考";
 
         return "未報到";
+      }
+
+      function getRecordNote(item) {
+        const action = getLogValue(item, "action", "操作類型");
+
+        if (action === "取消報到") return "取消報到";
+
+        return getLogValue(item, "note", "備註") || "-";
       }
 
       function renderStatusBadge(status) {
@@ -4604,7 +5949,13 @@ function renderPagination() {
       function formatRecordDate(date) {
         if (!date) return "-";
 
-        return formatDate(date);
+        if (typeof date === "string") {
+          return date.split(" ")[0].split("T")[0].replaceAll("-", "/");
+        }
+
+        const formatted = formatDate(date);
+
+        return formatted === "-" ? String(date).split(" ")[0] : formatted;
       }
 
       function formatRecordDateTime(datetime) {
@@ -4639,6 +5990,12 @@ function renderPagination() {
       ========================= */
 
       function renderLogsLoading() {
+        const pagination = document.getElementById("recordPaginationContainer");
+
+        if (pagination) {
+          pagination.innerHTML = "";
+        }
+
         document.getElementById("checkinRecordsTable").innerHTML = `
 
           ${Array(6)
@@ -4651,7 +6008,6 @@ function renderPagination() {
               <td><div class="skeleton-box skeleton-md"></div></td>
               <td><div class="skeleton-box skeleton-sm"></div></td>
               <td><div class="skeleton-box skeleton-md"></div></td>
-              <td><div class="skeleton-box skeleton-sm"></div></td>
               <td><div class="skeleton-box skeleton-sm"></div></td>
               <td><div class="skeleton-box skeleton-md"></div></td>
               <td><div class="skeleton-box skeleton-sm"></div></td>
@@ -4670,6 +6026,8 @@ function renderPagination() {
       ========================= */
 
       window.onload = function () {
+        initVisitorCounter();
+
         const user = localStorage.getItem("currentUser");
 
         if (user) {

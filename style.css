@@ -297,6 +297,24 @@ Dashboard
   overflow-x: hidden;
 }
 
+.guest-login-btn {
+  width: 100%;
+  height: 52px;
+  border: 2px solid #dbe2ea;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 16px;
+  font-weight: 800;
+  transition: 0.2s;
+}
+
+.guest-login-btn:hover {
+  border-color: #2563eb;
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
 .sidebar {
   min-height: 100vh;
 }
@@ -508,6 +526,54 @@ Cards
   color: #0f172a;
 }
 
+.dashboard-stats-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.dashboard-stat-card {
+  min-height: 110px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.dashboard-stat-card span {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.dashboard-stat-card strong {
+  color: #0f172a;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.dashboard-stat-card.success strong {
+  color: #166534;
+}
+
+.dashboard-stat-card.warning strong {
+  color: #92400e;
+}
+
+.dashboard-stat-card.primary strong {
+  color: #1d4ed8;
+}
+
+.dashboard-stat-card.muted strong {
+  color: #475569;
+}
+
 .dashboard-today-overview {
   margin-top: 24px;
   display: grid;
@@ -566,7 +632,15 @@ Cards
 
 .dashboard-table-row {
   display: grid;
-  grid-template-columns: minmax(180px, 1.5fr) minmax(130px, 1fr) minmax(100px, 0.55fr) minmax(120px, 0.7fr);
+  grid-template-columns:
+    minmax(160px, 1.3fr)   /* 活動場地 */
+    minmax(120px, 1fr)     /* 目前叫號 */
+    minmax(100px, 0.7fr)   /* 目前號碼 */
+    minmax(140px, 0.9fr)   /* 應完成報到 */
+    minmax(120px, 0.7fr)   /* 狀態 */
+    minmax(140px, 0.8fr);  /* 時間 */
+
+
   gap: 16px;
   align-items: center;
   padding: 16px 18px;
@@ -659,7 +733,54 @@ Cards
   }
 }
 
+@media (max-width: 768px) {
+  .checkin-table {
+    min-width: 1040px;
+  }
+
+  .checkin-table th:nth-child(9),
+  .checkin-table th:nth-child(10),
+  .checkin-table td.desktop-status-col {
+    display: none;
+  }
+
+  .checkin-table th:nth-child(8),
+  .checkin-table td:nth-child(8) {
+    width: 220px;
+  }
+
+  .desktop-status-badge {
+    display: none;
+  }
+
+  .mobile-status-panel {
+    display: grid;
+    gap: 8px;
+    min-width: 190px;
+  }
+
+  .mobile-status-row {
+    display: grid;
+    grid-template-columns: 72px minmax(90px, 1fr);
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mobile-status-row span:first-child {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .mobile-status-row strong {
+    color: #334155;
+    font-size: 14px;
+    font-weight: 800;
+  }
+}
+
 @media (max-width: 576px) {
+
   .dashboard-clock-wide,
   .dashboard-section-card {
     padding: 22px;
@@ -896,6 +1017,10 @@ Interview
   font-weight: 700;
 }
 
+.interview-select[type="search"] {
+  min-width: 240px;
+}
+
 #interviewActivitySelect {
   flex: 1 1 320px;
 }
@@ -960,13 +1085,22 @@ Interview
 
 .interview-table {
   width: 100%;
-  min-width: 1080px;
+  min-width: 1360px;
 }
 
 .interview-table th,
 .interview-table td {
   padding: 16px 14px;
   white-space: nowrap;
+  vertical-align: middle;
+}
+
+.interview-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+  box-shadow: inset 0 -1px 0 #e2e8f0;
 }
 
 .interview-row-calling td {
@@ -982,6 +1116,17 @@ Interview
   width: 18px;
   height: 18px;
   accent-color: #2563eb;
+}
+
+.interview-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.interview-actions .btn {
+  min-width: 62px;
 }
 
 /* =========================
@@ -1259,6 +1404,7 @@ Dashboard Loading
 
   font-weight: 700;
 }
+
 /* =========================
 Pagination
 ========================= */
@@ -1687,11 +1833,8 @@ Toast
 }
 
 .record-table {
-  width: max-content;
-
+  width: 100%;
   min-width: 1080px;
-
-  border-collapse: collapse;
 }
 
 .record-table thead {
@@ -1741,20 +1884,61 @@ Toast
 
 /* 響應式表格樣式 */
 @media (max-width: 768px) {
+  .interview-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .interview-select,
+  .interview-select[type="search"],
+  .interview-status-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .interview-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .interview-actions .btn {
+    width: 100%;
+  }
+
+  .pagination-wrapper {
+    justify-content: stretch;
+  }
+
+  .pagination-wrapper .page-btn {
+    flex: 1 1 110px;
+  }
+
+  .page-info {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 0;
+  }
+
   .record-table-wrapper {
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch; /* 平滑滾動在 iOS */
+    -webkit-overflow-scrolling: touch;
+    /* 平滑滾動在 iOS */
   }
 
   .record-table {
-    min-width: 800px; /* 確保表格不會壓縮太小，強制橫向滾動 */
-    font-size: 14px; /* 小屏幕上稍微縮小字體 */
+    min-width: 800px;
+    /* 確保表格不會壓縮太小，強制橫向滾動 */
+    font-size: 14px;
+    /* 小屏幕上稍微縮小字體 */
   }
 
   .record-table th,
   .record-table td {
-    padding: 12px 10px; /* 小屏幕上減少 padding */
-    white-space: nowrap; /* 防止文字換行 */
+    padding: 12px 10px;
+    /* 小屏幕上減少 padding */
+    white-space: nowrap;
+    /* 防止文字換行 */
   }
 
   .record-table th {
@@ -1763,6 +1947,50 @@ Toast
 
   .record-table td {
     font-size: 15px;
+  }
+
+  .checkin-table {
+    min-width: 1040px;
+  }
+
+  .checkin-table th:nth-child(9),
+  .checkin-table th:nth-child(10),
+  .checkin-table td.desktop-status-col {
+    display: none;
+  }
+
+  .checkin-table th:nth-child(8),
+  .checkin-table td:nth-child(8) {
+    width: 220px;
+  }
+
+  .desktop-status-badge {
+    display: none;
+  }
+
+  .mobile-status-panel {
+    display: grid;
+    gap: 8px;
+    min-width: 190px;
+  }
+
+  .mobile-status-row {
+    display: grid;
+    grid-template-columns: 72px minmax(90px, 1fr);
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mobile-status-row span:first-child {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .mobile-status-row strong {
+    color: #334155;
+    font-size: 14px;
+    font-weight: 800;
   }
 }
 
@@ -1892,6 +2120,10 @@ Toolbar
   color: #1d4ed8;
 }
 
+.checkin-summary-loading {
+  gap: 14px;
+}
+
 .filter-wrapper {
   display: flex;
   flex-direction: column;
@@ -1981,7 +2213,6 @@ Toolbar
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-  contain: inline-size;
 }
 
 /* =========================================================
@@ -2022,31 +2253,31 @@ Toolbar
 .w-30 {
   width: 30%;
 }
+
 .w-40 {
   width: 40%;
 }
+
 .w-50 {
   width: 50%;
 }
+
 .w-60 {
   width: 60%;
 }
+
 .w-70 {
   width: 70%;
 }
+
 .w-80 {
   width: 80%;
 }
 
 .checkin-table {
-  width: max-content;
-
+  width: 100%;
   min-width: 1280px;
-
-  table-layout: fixed;
-
   border-collapse: collapse;
-
   margin-bottom: 0;
 }
 
@@ -2209,9 +2440,13 @@ Toolbar
 
 /* 操作 */
 
-.checkin-table th:nth-child(14),
-.checkin-table td:nth-child(14) {
-  width: 110px;
+.checkin-table th,
+.checkin-table td {
+  white-space: nowrap;
+}
+
+.mobile-status-panel {
+  display: none;
 }
 
 /* Animation */
