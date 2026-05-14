@@ -319,9 +319,6 @@
                   onchange="filterInterviewMembers()"
                 >
                   <option value="">全部場地</option>
-                  <option value="第一試場">第一試場</option>
-                  <option value="第二試場">第二試場</option>
-                  <option value="第三試場">第三試場</option>
                 </select>
 
                 <select
@@ -362,6 +359,10 @@
                 <button class="btn btn-primary" onclick="reloadInterviewMembers()">
                   重新整理
                 </button>
+              </div>
+
+              <div class="interview-notice">
+                遲到報到者僅能在面試叫號階段單獨叫號；此頁只顯示已報到、遲到報到，以及仍在報到截止時間內的人員。
               </div>
 
               <div id="interviewSummary" class="interview-summary-grid"></div>
@@ -682,6 +683,30 @@
                   >
                     <option value="">全部面試狀態</option>
                   </select>
+                </div>
+
+                <div class="filter-wrapper filter-wrapper-time">
+                  <label class="filter-label" for="checkinTimeStartFilter"
+                    >報到時間起</label
+                  >
+                  <input
+                    id="checkinTimeStartFilter"
+                    class="filter-select"
+                    type="time"
+                    onchange="filterCheckinList()"
+                  />
+                </div>
+
+                <div class="filter-wrapper filter-wrapper-time">
+                  <label class="filter-label" for="checkinTimeEndFilter"
+                    >報到時間迄</label
+                  >
+                  <input
+                    id="checkinTimeEndFilter"
+                    class="filter-select"
+                    type="time"
+                    onchange="filterCheckinList()"
+                  />
                 </div>
               </div>
 
@@ -1303,6 +1328,18 @@
         );
       }
 
+      function isLateCheckinRecord(member) {
+        const status = String(member?.checkinStatus || "");
+        const note = String(member?.note || "");
+
+        return (
+          status === "遲到報到" ||
+          status === "報到遲到" ||
+          note.includes("遲到") ||
+          (isCheckedInRecord(member) && isLateCheckin(member, member.checkinTime))
+        );
+      }
+
       function isInterviewCompletedRecord(item) {
         const status = item.interviewStatus || "";
 
@@ -1603,6 +1640,7 @@
             </div>
           </div>
 
+          ${/*
           <div class="dashboard-section-card">
             <div class="dashboard-section-title">各活動目前狀態</div>
             <div class="dashboard-table">
@@ -1626,16 +1664,17 @@
                 .join("")}
             </div>
           </div>
+          */ ""}
 
           <div class="dashboard-section-card">
             <div class="dashboard-section-title">各活動目前叫號</div>
-            <div class="dashboard-table">
-              <div class="dashboard-table-row dashboard-table-head">
+            <div class="dashboard-table dashboard-calling-table">
+              <div class="dashboard-table-row dashboard-calling-row dashboard-table-head">
                 <div>活動名稱</div>
                 <div>場地</div>
                 <div>目前叫號</div>
-                <div>人員</div>
-                <div>目前時段應完成報到號</div>
+                <div>報到情況</div>
+                <div>目前時段報到進度</div>
               </div>
               ${groups.map(renderDashboardCallingRows).join("")}
             </div>
@@ -1663,19 +1702,54 @@
             members: activityMembers,
             checkedInCount,
             uncheckedCount,
-            callingByLocation: getDashboardCallingByLocation(activityMembers),
-            prepRangeByLocation: getDashboardPrepRangeByLocation(activityMembers),
+            locationRows: getDashboardLocationRows(activity, activityMembers),
           };
         });
       }
 
-      function getDashboardCallingByLocation(members) {
+      function getDashboardLocationRows(activity, members) {
+        const locations = new Set(
+          members
+            .map((member) => member.location || activity.location || "未設定場地")
+            .filter(Boolean),
+        );
+
+        if (locations.size === 0) {
+          locations.add(activity.location || "未設定場地");
+        }
+
+        const callingByLocation = getDashboardCallingByLocation(activity, members);
+        const prepRangeByLocation = getDashboardPrepRangeByLocation(activity, members);
+
+        return [...locations]
+          .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"))
+          .map((location) => {
+            const locationMembers = members.filter(
+              (member) => (member.location || activity.location || "未設定場地") === location,
+            );
+            const checkedInCount = locationMembers.filter(isCheckedInRecord).length;
+            const lateCount = locationMembers.filter(isLateCheckinRecord).length;
+            const totalCount = locationMembers.length;
+
+            return {
+              location,
+              calling: callingByLocation.get(location) || null,
+              prepRange: prepRangeByLocation.get(location) || null,
+              totalCount,
+              checkedInCount,
+              lateCount,
+              uncheckedCount: Math.max(totalCount - checkedInCount, 0),
+            };
+          });
+      }
+
+      function getDashboardCallingByLocation(activity, members) {
         const callingMap = new Map();
 
         members
           .filter((member) => member.currentCalling && !isInterviewCompletedRecord(member))
           .forEach((member) => {
-            const location = member.location || "未設定場地";
+            const location = member.location || activity.location || "未設定場地";
             const callNumber = getDashboardCallNumber(member);
             const current = callingMap.get(location);
 
@@ -1689,24 +1763,30 @@
             }
           });
 
-        return [...callingMap.values()];
+        return callingMap;
       }
 
-      function getDashboardPrepRangeByLocation(members) {
+      function getDashboardPrepRangeByLocation(activity, members) {
         const rangeMap = new Map();
         const now = new Date();
 
         members
           .filter((member) => isMemberInCurrentCheckinSlot(member, now))
           .forEach((member) => {
-            const location = member.location || "未設定場地";
+            const location = member.location || activity.location || "未設定場地";
             const number = getDashboardCallNumber(member);
+            const checkedIn = isCheckedInRecord(member);
             const current = rangeMap.get(location) || {
               minValue: number.value,
               maxValue: number.value,
               minLabel: number.label,
               maxLabel: number.label,
+              total: 0,
+              checkedIn: 0,
             };
+
+            current.total += 1;
+            if (checkedIn) current.checkedIn += 1;
 
             if (number.value < current.minValue) {
               current.minValue = number.value;
@@ -1737,13 +1817,29 @@
         return now >= start && now <= end;
       }
 
-      function formatDashboardPrepRange(group, location) {
-        const range = group.prepRangeByLocation.get(location);
+      function formatDashboardPrepRange(row) {
+        const range = row.prepRange;
 
-        if (!range) return "-";
-        if (range.minLabel === range.maxLabel) return `${escapeHtml(range.minLabel)}號`;
+        if (!range) {
+          return `
+            <div class="dashboard-progress-cell is-idle">
+              <strong class="dashboard-progress-range">非目前報到時段</strong>
+              <span class="dashboard-progress-count">已報到 ${row.checkedInCount} / ${row.totalCount}</span>
+            </div>
+          `;
+        }
 
-        return `${escapeHtml(range.minLabel)}-${escapeHtml(range.maxLabel)}號`;
+        const rangeLabel =
+          range.minLabel === range.maxLabel
+            ? `${escapeHtml(range.minLabel)}號`
+            : `${escapeHtml(range.minLabel)}-${escapeHtml(range.maxLabel)}號`;
+
+        return `
+          <div class="dashboard-progress-cell is-active">
+            <strong class="dashboard-progress-range">${rangeLabel}</strong>
+            <span class="dashboard-progress-count">應完成 ${range.checkedIn} / ${range.total} 人</span>
+          </div>
+        `;
       }
 
       function getDashboardCallNumber(member) {
@@ -1763,27 +1859,45 @@
       }
 
       function renderDashboardCallingRows(group) {
-        if (group.callingByLocation.length === 0) {
+        if (group.locationRows.length === 0) {
           return `
-            <div class="dashboard-table-row">
+            <div class="dashboard-table-row dashboard-calling-row">
               <div>${escapeHtml(group.name)}</div>
-              <div>尚無叫號</div>
-              <div class="dashboard-number muted">-</div>
-              <div>-</div>
-              <div>-</div>
+              <div>未設定場地</div>
+              <div class="dashboard-call-cell">
+                <div class="dashboard-call-number muted">-</div>
+                <div class="dashboard-call-name">尚無叫號</div>
+              </div>
+              <div class="dashboard-checkin-summary">尚無報到資料</div>
+              <div class="dashboard-progress-cell is-idle">
+                <strong class="dashboard-progress-range">-</strong>
+                <span class="dashboard-progress-count">-</span>
+              </div>
             </div>
           `;
         }
 
-        return group.callingByLocation
+        return group.locationRows
           .map(
-            (calling) => `
-              <div class="dashboard-table-row">
+            (row) => `
+              <div class="dashboard-table-row dashboard-calling-row">
                 <div>${escapeHtml(group.name)}</div>
-                <div>${escapeHtml(calling.location)}</div>
-                <div class="dashboard-number primary">${escapeHtml(calling.label)}</div>
-                <div>${escapeHtml(calling.name)}</div>
-                <div>${formatDashboardPrepRange(group, calling.location)}</div>
+                <div>${escapeHtml(row.location)}</div>
+                <div class="dashboard-call-cell ${row.calling ? "is-calling" : "is-waiting"}">
+                  ${
+                    row.calling
+                      ? `<div class="dashboard-call-number">${escapeHtml(row.calling.label)}</div>
+                         <div class="dashboard-call-name">${escapeHtml(row.calling.name)}</div>`
+                      : `<div class="dashboard-call-number muted">-</div>
+                         <div class="dashboard-call-name">尚無叫號</div>`
+                  }
+                </div>
+                <div class="dashboard-checkin-summary">
+                  <span class="success">已報到 ${row.checkedInCount}</span>
+                  <span class="warning">未報到 ${row.uncheckedCount}</span>
+                  ${row.lateCount ? `<span class="late">遲到 ${row.lateCount}</span>` : ""}
+                </div>
+                ${formatDashboardPrepRange(row)}
               </div>
             `,
           )
@@ -2758,12 +2872,8 @@
       }
 
       function populateInterviewFilters(members) {
-        const defaultLocations = ["第一試場", "第二試場", "第三試場"];
         const locations = [
-          ...new Set([
-            ...defaultLocations,
-            ...members.map((member) => member.location).filter(Boolean),
-          ]),
+          ...new Set(members.map((member) => member.location).filter(Boolean)),
         ];
 
         populateInterviewSelect("interviewLocationFilter", "全部場地", locations);
@@ -2808,6 +2918,7 @@
 
         filteredInterviewMembers = currentInterviewMembers
           .filter((member) => !isAbsentRecord(member))
+          .filter(isVisibleInInterviewCalling)
           .filter((member) => !location || member.location === location)
           .filter((member) => !status || getInterviewProcessStatus(member) === status)
           .filter((member) => !timeSlot || getInterviewTimeSlot(member) === timeSlot)
@@ -3009,7 +3120,11 @@
       }
 
       function isInterviewSelectable(member) {
-        return isCheckedInRecord(member) && !isInterviewCompletedRecord(member);
+        return (
+          isCheckedInRecord(member) &&
+          !isLateCheckinRecord(member) &&
+          !isInterviewCompletedRecord(member)
+        );
       }
 
       function formatInterviewTimeRange(member) {
@@ -3060,6 +3175,23 @@
         }
 
         return "未叫號";
+      }
+
+      function isVisibleInInterviewCalling(member) {
+        return isCheckedInRecord(member) || isBeforeCheckinEndTime(member);
+      }
+
+      function isBeforeCheckinEndTime(member, now = new Date()) {
+        if (!member?.checkinEndTime) return false;
+
+        const endTime = parseFrontDateTime(member.date, member.checkinEndTime);
+        const currentTime = new Date(now);
+
+        if (Number.isNaN(endTime.getTime()) || Number.isNaN(currentTime.getTime())) {
+          return false;
+        }
+
+        return currentTime <= endTime;
       }
 
       function getInterviewProcessStatus(member) {
@@ -3315,7 +3447,12 @@
         );
 
         if (selected.length === 0) {
-          showToast("請先勾選已報到且尚未叫號的人員", "error");
+          showToast("請先勾選已報到、非遲到且尚未叫號的人員", "error");
+          return;
+        }
+
+        if (selected.some(isLateCheckinRecord)) {
+          showToast("遲到報到者需等待指定時段，請在面試叫號階段單獨叫號", "error");
           return;
         }
 
@@ -5083,6 +5220,8 @@ function renderPagination() {
           location: document.getElementById("locationFilter").value,
           checkinStatus: document.getElementById("checkinStatusFilter").value,
           interviewStatus: document.getElementById("interviewStatusFilter").value,
+          checkinTimeStart: document.getElementById("checkinTimeStartFilter").value,
+          checkinTimeEnd: document.getElementById("checkinTimeEndFilter").value,
         };
       }
 
@@ -5093,6 +5232,10 @@ function renderPagination() {
           filters.checkinStatus || "";
         document.getElementById("interviewStatusFilter").value =
           filters.interviewStatus || "";
+        document.getElementById("checkinTimeStartFilter").value =
+          filters.checkinTimeStart || "";
+        document.getElementById("checkinTimeEndFilter").value =
+          filters.checkinTimeEnd || "";
       }
 
       function resetCheckinFilters() {
@@ -5101,6 +5244,8 @@ function renderPagination() {
           location: "",
           checkinStatus: "",
           interviewStatus: "",
+          checkinTimeStart: "",
+          checkinTimeEnd: "",
         });
       }
 
@@ -5128,6 +5273,14 @@ function renderPagination() {
           .getElementById("interviewStatusFilter")
           .value.trim();
 
+        const checkinTimeStart = document
+          .getElementById("checkinTimeStartFilter")
+          .value.trim();
+
+        const checkinTimeEnd = document
+          .getElementById("checkinTimeEndFilter")
+          .value.trim();
+
         // 先隱藏面試已完成，再根據地點、報到、面試狀態篩選
         let filtered = currentCheckinMembers.filter(
           (member) => !shouldHideFromCheckinTable(member),
@@ -5151,6 +5304,12 @@ function renderPagination() {
           );
         }
 
+        if (checkinTimeStart || checkinTimeEnd) {
+          filtered = filtered.filter((member) =>
+            isCheckinTimeWithinFilter(member, checkinTimeStart, checkinTimeEnd),
+          );
+        }
+
         // 再根據關鍵字篩選
         if (keyword !== "") {
           filtered = filtered.filter(
@@ -5166,6 +5325,38 @@ function renderPagination() {
         if (resetPage) {
           currentCheckinPage = 1;
         }
+      }
+
+      function isCheckinTimeWithinFilter(member, startTime, endTime) {
+        if (!member.checkinTime) return false;
+
+        const minutes = getMinutesFromDateTime(member.checkinTime);
+        const startMinutes = getMinutesFromTimeInput(startTime);
+        const endMinutes = getMinutesFromTimeInput(endTime);
+
+        if (minutes === null) return false;
+        if (startMinutes !== null && minutes < startMinutes) return false;
+        if (endMinutes !== null && minutes > endMinutes) return false;
+
+        return true;
+      }
+
+      function getMinutesFromDateTime(datetime) {
+        const date = new Date(datetime);
+
+        if (Number.isNaN(date.getTime())) return null;
+
+        return date.getHours() * 60 + date.getMinutes();
+      }
+
+      function getMinutesFromTimeInput(time) {
+        if (!time) return null;
+
+        const [hour, minute] = time.split(":").map(Number);
+
+        if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+
+        return hour * 60 + minute;
       }
 
       function sortCheckinMembers(members) {

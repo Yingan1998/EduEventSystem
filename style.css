@@ -659,6 +659,142 @@ Cards
   font-weight: 800;
 }
 
+.dashboard-calling-table .dashboard-table-head div:nth-child(3) {
+  color: #1d4ed8;
+}
+
+.dashboard-calling-table .dashboard-table-head div:nth-child(4) {
+  color: #047857;
+}
+
+.dashboard-calling-table .dashboard-table-head div:nth-child(5) {
+  color: #b45309;
+}
+
+.dashboard-calling-row {
+  grid-template-columns:
+    minmax(180px, 1.25fr)
+    minmax(130px, 0.85fr)
+    minmax(130px, 0.8fr)
+    minmax(180px, 1fr)
+    minmax(200px, 1.15fr);
+  align-items: stretch;
+}
+
+.dashboard-call-cell,
+.dashboard-checkin-summary,
+.dashboard-progress-cell {
+  width: 100%;
+  min-height: 116px;
+  height: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+
+.dashboard-call-cell {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+}
+
+.dashboard-call-cell.is-waiting {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+
+.dashboard-call-number {
+  color: #1d4ed8;
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.dashboard-call-number.muted {
+  color: #94a3b8;
+}
+
+.dashboard-call-name {
+  margin-top: 4px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.dashboard-checkin-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: center;
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+}
+
+.dashboard-checkin-summary span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.dashboard-checkin-summary .success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.dashboard-checkin-summary .warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.dashboard-checkin-summary .late {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dashboard-progress-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
+}
+
+.dashboard-progress-cell.is-idle {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+
+.dashboard-progress-cell.is-active {
+  border-color: #fdba74;
+}
+
+.dashboard-progress-range {
+  display: block;
+  color: #9a3412;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-progress-count {
+  display: block;
+  color: #c2410c;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.dashboard-progress-cell.is-idle .dashboard-progress-range,
+.dashboard-progress-cell.is-idle .dashboard-progress-count {
+  color: #64748b;
+}
+
 .dashboard-number {
   font-size: 26px;
   font-weight: 900;
@@ -1001,7 +1137,7 @@ Interview
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
-  margin-bottom: 22px;
+  margin-bottom: 14px;
 }
 
 .interview-select,
@@ -1019,6 +1155,18 @@ Interview
 
 .interview-select[type="search"] {
   min-width: 240px;
+}
+
+.interview-notice {
+  margin-bottom: 22px;
+  padding: 14px 18px;
+  border: 1px solid #fed7aa;
+  border-radius: 14px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.6;
 }
 
 #interviewActivitySelect {
@@ -2131,6 +2279,11 @@ Toolbar
   flex: 1 1 220px;
   min-width: 180px;
   max-width: 260px;
+}
+
+.filter-wrapper-time {
+  flex: 0 1 180px;
+  max-width: 200px;
 }
 
 .filter-label {
