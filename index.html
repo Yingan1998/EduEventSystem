@@ -1031,6 +1031,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/@zxing/browser@latest"></script>
 
     <script>
       let dashboardLoaded = false;
@@ -1092,6 +1093,12 @@
       let barcodeScannerTimer = null;
 
       let barcodeDetector = null;
+
+      let zxingReader = null;
+
+      let zxingScannerControls = null;
+
+      let barcodeScanHandling = false;
 
       let interviewActivitiesCache = [];
 
@@ -5984,17 +5991,20 @@ function renderPagination() {
 
           barcodeDetector = await createBarcodeDetector();
 
-          if (!barcodeDetector) {
-            message.innerText =
-              "相機已開啟，但此瀏覽器不支援自動條碼辨識；請改用搜尋欄輸入身分證字號。";
-            showToast("相機已開啟，但此瀏覽器不支援自動條碼辨識", "error");
+          if (barcodeDetector) {
+            message.innerText = "相機已開啟，請將身分證條碼置於畫面中央";
+            clearInterval(barcodeScannerTimer);
+            barcodeScannerTimer = setInterval(scanIdBarcodeFrame, 700);
             return;
           }
 
-          message.innerText = "相機已開啟，請將身分證條碼置於畫面中央";
+          const zxingStarted = await startZxingBarcodeScanner(video, message);
 
-          clearInterval(barcodeScannerTimer);
-          barcodeScannerTimer = setInterval(scanIdBarcodeFrame, 700);
+          if (!zxingStarted) {
+            message.innerText =
+              "相機已開啟，但此瀏覽器無法自動辨識條碼；請改用搜尋欄輸入身分證字號。";
+            showToast("相機已開啟，但無法啟動條碼辨識器", "error");
+          }
         } catch (err) {
           console.error(err);
           const isInsecure = location.protocol !== "https:" && location.hostname !== "localhost";
@@ -6052,6 +6062,13 @@ function renderPagination() {
       function stopIdBarcodeScanner() {
         clearInterval(barcodeScannerTimer);
         barcodeScannerTimer = null;
+        barcodeScanHandling = false;
+
+        if (zxingScannerControls?.stop) {
+          zxingScannerControls.stop();
+        }
+
+        zxingScannerControls = null;
 
         if (barcodeScannerStream) {
           barcodeScannerStream.getTracks().forEach((track) => track.stop());
@@ -6077,33 +6094,79 @@ function renderPagination() {
           if (!barcodes.length) return;
 
           const rawValue = String(barcodes[0].rawValue || "").trim();
-          const member = findCheckinMemberByScannedId(rawValue);
-
-          if (!member) {
-            message.innerText = `找不到身分資料：${rawValue}`;
-            return;
-          }
-
-          stopIdBarcodeScanner();
-
-          if (isCheckedInRecord(member)) {
-            showToast(`${member.name || "此人員"} 已報到`, "error");
-            keepCheckinMemberVisible(member.uuid);
-            renderCheckinTable();
-            return;
-          }
-
-          if (isInterviewCompletedRecord(member)) {
-            showToast("面試已完成，報到狀態已鎖定", "error");
-            return;
-          }
-
-          document.getElementById("checkinSearch").value = member.idNumber || "";
-          filterCheckinList();
-          checkinMember(member.uuid);
+          await handleScannedBarcodeValue(rawValue, message);
         } catch (err) {
           console.warn("條碼掃描失敗", err);
         }
+      }
+
+      async function startZxingBarcodeScanner(video, message) {
+        if (!window.ZXingBrowser) return false;
+
+        try {
+          const ReaderClass =
+            ZXingBrowser.BrowserMultiFormatOneDReader ||
+            ZXingBrowser.BrowserMultiFormatReader ||
+            ZXingBrowser.BrowserCodeReader;
+
+          if (!ReaderClass) return false;
+
+          zxingReader = zxingReader || new ReaderClass();
+          message.innerText = "相機已開啟，正在使用 ZXing 辨識身分證條碼";
+
+          zxingScannerControls = await zxingReader.decodeFromVideoElement(
+            video,
+            (result) => {
+              if (!result) return;
+
+              const rawValue =
+                typeof result.getText === "function"
+                  ? result.getText()
+                  : result.text || String(result || "");
+
+              handleScannedBarcodeValue(rawValue, message);
+            },
+          );
+
+          return true;
+        } catch (err) {
+          console.warn("ZXing 條碼辨識器啟動失敗", err);
+          return false;
+        }
+      }
+
+      async function handleScannedBarcodeValue(rawValue, message = null) {
+        if (barcodeScanHandling) return;
+
+        const value = String(rawValue || "").trim();
+
+        if (!value) return;
+
+        const member = findCheckinMemberByScannedId(value);
+
+        if (!member) {
+          if (message) message.innerText = `已讀取但找不到身分資料：${value}`;
+          return;
+        }
+
+        barcodeScanHandling = true;
+        stopIdBarcodeScanner();
+
+        if (isCheckedInRecord(member)) {
+          showToast(`${member.name || "此人員"} 已報到`, "error");
+          keepCheckinMemberVisible(member.uuid);
+          renderCheckinTable();
+          return;
+        }
+
+        if (isInterviewCompletedRecord(member)) {
+          showToast("面試已完成，報到狀態已鎖定", "error");
+          return;
+        }
+
+        document.getElementById("checkinSearch").value = member.idNumber || "";
+        filterCheckinList();
+        checkinMember(member.uuid);
       }
 
       function findCheckinMemberByScannedId(rawValue) {
