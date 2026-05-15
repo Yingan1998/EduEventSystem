@@ -3627,6 +3627,12 @@
             member.currentCalling = "";
           });
 
+          await Promise.all(
+            expiredMembers.map((member) =>
+              writeCheckinLog("自動完成面試", member, "系統自動"),
+            ),
+          );
+
           filterInterviewMembers();
           showToast(`面試時間已結束，已自動完成 ${expiredMembers.length} 人`, "success");
         } catch (err) {
@@ -3713,6 +3719,12 @@
             member.interviewStatus = "面試中";
           });
 
+          await Promise.all(
+            selected.map((member) =>
+              writeCheckinLog("面試叫號", member, currentUser.name || ""),
+            ),
+          );
+
           selectedInterviewUuids.clear();
           filterInterviewMembers();
           showToast(`已批次叫號 ${selected.length} 人`, "success");
@@ -3790,6 +3802,8 @@
           member.currentCalling = "叫號中";
           member.interviewStatus = "面試中";
 
+          await writeCheckinLog("面試叫號", member, currentUser.name || "");
+
           filterInterviewMembers();
           showToast(`已叫號：${member.name || getInterviewRegistrationNumber(member)}`, "success");
         } catch (err) {
@@ -3844,6 +3858,8 @@
           }
 
           resetInterviewCallingState(member);
+
+          await writeCheckinLog("取消面試叫號", member, currentUser.name || "");
 
           selectedInterviewUuids.delete(uuid);
           filterInterviewMembers();
@@ -3925,6 +3941,12 @@
             member.finishTime = finishTime;
             member.currentCalling = "";
           });
+
+          await Promise.all(
+            selected.map((member) =>
+              writeCheckinLog("面試完成", member, currentUser.name || ""),
+            ),
+          );
 
           selectedInterviewUuids.clear();
           filterInterviewMembers();
@@ -4036,6 +4058,8 @@
           member.interviewStatus = "已完成";
           member.finishTime = finishTime;
           member.currentCalling = "";
+
+          await writeCheckinLog("面試完成", member, currentUser.name || "");
 
           filterInterviewMembers();
           showToast(`已完成面試：${member.name || getInterviewRegistrationNumber(member)}`, "success");
@@ -5093,10 +5117,16 @@
           }),
         }).catch(() => null);
 
-        const originalNote = member.note || "";
-        member.note = `${originalNote ? `${originalNote}；` : ""}可叫號時段 ${formatLateCallDisplayTime(getLateCallAvailableTime(member))}`;
-        await writeCheckinLog("設定遲到可叫號時段", member, operator);
-        member.note = originalNote;
+        await writeCheckinLog(
+          "設定遲到可叫號時段",
+          {
+            ...member,
+            checkinTime: "",
+            currentCalling: "",
+            note: `${member.note ? `${member.note}；` : ""}可叫號時段 ${formatLateCallDisplayTime(getLateCallAvailableTime(member))}`,
+          },
+          operator,
+        );
       }
 
       function isLateCallTimeReached(member, now = new Date()) {
@@ -6164,9 +6194,25 @@ function renderPagination() {
           return;
         }
 
+        if (!confirm(buildScannedCheckinConfirmMessage(member))) {
+          barcodeScanHandling = false;
+          return;
+        }
+
         document.getElementById("checkinSearch").value = member.idNumber || "";
         filterCheckinList();
         checkinMember(member.uuid);
+      }
+
+      function buildScannedCheckinConfirmMessage(member) {
+        return [
+          "確認掃描報到？",
+          "",
+          `姓名：${member.name || "-"}`,
+          `身分證字號：${member.idNumber || member.identityNumber || "-"}`,
+          `活動編號：${member.activityNumber || member.examNumber || "-"}`,
+          `試場：${member.location || "-"}`,
+        ].join("\n");
       }
 
       function findCheckinMemberByScannedId(rawValue) {
