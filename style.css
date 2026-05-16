@@ -2713,74 +2713,74 @@ Toolbar
   }
 }
 
-/* 姓名 */
+/* 操作 */
 
 .checkin-table th:nth-child(1),
 .checkin-table td:nth-child(1) {
+  width: 96px;
+}
+
+/* 姓名 */
+
+.checkin-table th:nth-child(2),
+.checkin-table td:nth-child(2) {
   width: 76px;
 }
 
 /* 身分證 */
 
-.checkin-table th:nth-child(2),
-.checkin-table td:nth-child(2) {
+.checkin-table th:nth-child(3),
+.checkin-table td:nth-child(3) {
   width: 120px;
 }
 
 /* 活動編號 */
 
-.checkin-table th:nth-child(3),
-.checkin-table td:nth-child(3) {
+.checkin-table th:nth-child(4),
+.checkin-table td:nth-child(4) {
   width: 74px;
 }
 
 /* 地點 */
 
-.checkin-table th:nth-child(4),
-.checkin-table td:nth-child(4) {
+.checkin-table th:nth-child(5),
+.checkin-table td:nth-child(5) {
   width: 112px;
 }
 
 /* 日期 */
 
-.checkin-table th:nth-child(5),
-.checkin-table td:nth-child(5) {
+.checkin-table th:nth-child(6),
+.checkin-table td:nth-child(6) {
   width: 108px;
 }
 
 /* 報到開始 */
-
-.checkin-table th:nth-child(6),
-.checkin-table td:nth-child(6) {
-  width: 90px;
-}
-
-/* 報到截止 */
 
 .checkin-table th:nth-child(7),
 .checkin-table td:nth-child(7) {
   width: 90px;
 }
 
-/* 報到狀態 */
+/* 報到截止 */
 
 .checkin-table th:nth-child(8),
 .checkin-table td:nth-child(8) {
+  width: 90px;
+}
+
+/* 報到狀態 */
+
+.checkin-table th:nth-child(9),
+.checkin-table td:nth-child(9) {
   width: 116px;
 }
 
 /* 面試狀態 */
 
-.checkin-table th:nth-child(9),
-.checkin-table td:nth-child(9) {
-  width: 112px;
-}
-
-/* 叫號 */
-
 .checkin-table th:nth-child(10),
 .checkin-table td:nth-child(10) {
-  width: 90px;
+  width: 112px;
 }
 
 /* 缺考 */
@@ -2803,8 +2803,6 @@ Toolbar
 .checkin-table td:nth-child(13) {
   width: 120px;
 }
-
-/* 操作 */
 
 .checkin-table th,
 .checkin-table td {

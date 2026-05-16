@@ -350,10 +350,9 @@
                   class="interview-select"
                   onchange="changeInterviewPageSize(this.value)"
                 >
+                  <option value="5">每頁 5 筆</option>
                   <option value="10">每頁 10 筆</option>
-                  <option value="25">每頁 25 筆</option>
-                  <option value="50">每頁 50 筆</option>
-                  <option value="100">每頁 100 筆</option>
+                  <option value="20">每頁 20 筆</option>
                 </select>
 
                 <button class="btn btn-primary" onclick="reloadInterviewMembers()">
@@ -609,7 +608,7 @@
                     type="text"
                     id="checkinSearch"
                     class="search-input"
-                    placeholder="搜尋姓名 / 身分證字號"
+                    placeholder="搜尋姓名 / 身分證字號 / 活動編號"
                     onkeyup="filterCheckinList()"
                     onkeydown="handleCheckinSearchKeydown(event)"
                   />
@@ -718,7 +717,7 @@
 
                 <div class="filter-wrapper filter-wrapper-time">
                   <label class="filter-label" for="checkinTimeStartFilter"
-                    >報到時間起</label
+                    >活動時段起</label
                   >
                   <input
                     id="checkinTimeStartFilter"
@@ -730,7 +729,7 @@
 
                 <div class="filter-wrapper filter-wrapper-time">
                   <label class="filter-label" for="checkinTimeEndFilter"
-                    >報到時間迄</label
+                    >活動時段迄</label
                   >
                   <input
                     id="checkinTimeEndFilter"
@@ -757,6 +756,8 @@
                 <table class="table align-middle checkin-table">
                   <thead>
                     <tr>
+                      <th>操作</th>
+
                       <th>姓名</th>
 
                       <th>身分證字號</th>
@@ -775,21 +776,17 @@
 
                       <th>面試狀態</th>
 
-                      <th>目前叫號</th>
-
                       <th>缺考</th>
 
                       <th>報到時間</th>
 
                       <th>備註</th>
-
-                      <th>操作</th>
                     </tr>
                   </thead>
 
                   <tbody id="checkinTableBody">
                     <tr>
-                      <td colspan="14">載入中...</td>
+                      <td colspan="13">載入中...</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1120,7 +1117,7 @@
 
       let currentInterviewPage = 1;
 
-      let interviewPageSize = 10;
+      let interviewPageSize = 5;
 
       let interviewAutoCompleteTimer = null;
 
@@ -3277,7 +3274,7 @@
       }
 
       function toggleAllInterviewSelection(checked) {
-        const selectableMembers = filteredInterviewMembers.filter(isInterviewSelectable);
+        const selectableMembers = getInterviewPageSelectableMembers();
 
         if (checked) {
           selectableMembers.forEach((member) => selectedInterviewUuids.add(member.uuid));
@@ -3299,13 +3296,17 @@
       function updateInterviewSelectionUI() {
         const countEl = document.getElementById("interviewSelectedCount");
         const selectAll = document.getElementById("interviewSelectAll");
+        const pageMembers = getInterviewPageMembers();
+        const selectable = getInterviewPageSelectableMembers();
+        const selectedOnPage = pageMembers.filter((member) =>
+          selectedInterviewUuids.has(member.uuid),
+        );
 
         if (countEl) {
-          countEl.innerText = `已選 ${selectedInterviewUuids.size} 人｜共 ${filteredInterviewMembers.length} 筆｜流程：已報到 → 叫號中 → 面試中 → 面試完成`;
+          countEl.innerText = `本頁已選 ${selectedOnPage.length} 人｜本頁 ${pageMembers.length} 筆｜共 ${filteredInterviewMembers.length} 筆｜流程：已報到 → 叫號中 → 面試中 → 面試完成`;
         }
 
         if (selectAll) {
-          const selectable = filteredInterviewMembers.filter(isInterviewSelectable);
           selectAll.checked =
             selectable.length > 0 &&
             selectable.every((member) => selectedInterviewUuids.has(member.uuid));
@@ -3317,10 +3318,14 @@
       }
 
       function getSelectedInterviewMembers() {
-        return currentInterviewMembers.filter(
+        return getInterviewPageMembers().filter(
           (member) =>
             selectedInterviewUuids.has(member.uuid) && isInterviewSelectable(member),
         );
+      }
+
+      function getInterviewPageSelectableMembers() {
+        return getInterviewPageMembers().filter(isInterviewSelectable);
       }
 
       function isInterviewSelectable(member) {
@@ -3553,6 +3558,7 @@
         if (!Number.isFinite(pageNum) || pageNum < 1 || pageNum > totalPages) return;
 
         currentInterviewPage = pageNum;
+        selectedInterviewUuids.clear();
         renderInterviewTable();
       }
 
@@ -3561,7 +3567,10 @@
       }
 
       function changeInterviewPageSize(value) {
-        interviewPageSize = Number(value) || 10;
+        const nextPageSize = Number(value);
+        interviewPageSize = [5, 10, 20].includes(nextPageSize) ? nextPageSize : 5;
+        currentInterviewPage = 1;
+        selectedInterviewUuids.clear();
         clampInterviewPage();
         renderInterviewTable();
       }
@@ -4553,7 +4562,7 @@
 
                       <tr>
 
-                          <td colspan="15">
+                          <td colspan="13">
 
                               尚無報到資料
 
@@ -4687,7 +4696,7 @@
         if (pageMembers.length === 0) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="14" class="empty-cell">查無符合條件的報到資料</td>
+              <td colspan="13" class="empty-cell">查無符合條件的報到資料</td>
             </tr>
           `;
           renderPagination();
@@ -4708,13 +4717,17 @@
                 showLocationHeader
                   ? `
                     <tr class="checkin-location-row">
-                      <td colspan="14">${escapeHtml(location)}</td>
+                      <td colspan="13">${escapeHtml(location)}</td>
                     </tr>
                   `
                   : ""
               }
 
               <tr class="${getCheckinRowClass(member, firstActionableUuid)}">
+
+                  <td>
+                      ${renderCheckinActionCell(member)}
+                  </td>
 
                   <td>
                       ${escapeHtml(member.name || "-")}
@@ -4764,10 +4777,6 @@
               <span>面試狀態</span>
               ${renderInterviewBadge(member.interviewStatus)}
             </div>
-            <div class="mobile-status-row">
-              <span>目前叫號</span>
-              <strong>${escapeHtml(member.currentCalling ? "叫號中" : "-")}</strong>
-            </div>
           </div>
 
       </td>
@@ -4784,12 +4793,6 @@
           </span>
 
       </td>
-
-
-
-                  <td class="desktop-status-col">
-                      ${member.currentCalling ? "叫號中" : "-"}
-                  </td>
 
                   <td>
           ${
@@ -4814,111 +4817,6 @@
           ${renderCheckinNoteCell(member)}
       </td>
 
-                  <td>
-
-          ${
-            isInterviewCompletedRecord(member)
-              ? `
-
-              <button
-
-                class="
-                  btn
-                  btn-secondary
-                  btn-sm
-                "
-
-                disabled>
-
-                已鎖定
-
-              </button>
-
-              `
-              : getInterviewCallStatus(member) === "叫號中"
-                ? `
-
-              <button
-
-                class="
-                  btn
-                  btn-secondary
-                  btn-sm
-                "
-
-                disabled>
-
-                叫號中
-
-              </button>
-
-              `
-              : canCancelCheckin(member)
-              ? `
-              <button
-
-                class="
-                  btn
-                  btn-danger
-                  btn-sm
-                "
-
-                onclick="
-                  cancelCheckin(
-                    '${member.uuid}',
-                    this
-                  )
-                ">
-
-                取消報到
-
-              </button>
-
-              `
-              : isCheckinNotStarted(member)
-                ? `
-
-              <button
-
-                class="
-                  btn
-                  btn-secondary
-                  btn-sm
-                "
-
-                disabled>
-
-                尚未開始
-
-              </button>
-
-              `
-                : `
-
-              <button
-
-                class="
-                  btn
-                  btn-success
-                  btn-sm
-                "
-
-                onclick="
-                  checkinMember(
-                    '${member.uuid}',
-                    this
-                  )
-                ">
-
-                報到
-
-              </button>
-
-              `
-          }
-
-      </td>
-
               </tr>
 
           `;
@@ -4926,6 +4824,52 @@
           .join("");
 
         renderPagination();
+      }
+
+      function renderCheckinActionCell(member) {
+        if (isInterviewCompletedRecord(member)) {
+          return `
+            <button class="btn btn-secondary btn-sm" disabled>
+              已鎖定
+            </button>
+          `;
+        }
+
+        if (getInterviewCallStatus(member) === "叫號中") {
+          return `
+            <button class="btn btn-secondary btn-sm" disabled>
+              叫號中
+            </button>
+          `;
+        }
+
+        if (canCancelCheckin(member)) {
+          return `
+            <button
+              class="btn btn-danger btn-sm"
+              onclick="cancelCheckin('${member.uuid}', this)"
+            >
+              取消報到
+            </button>
+          `;
+        }
+
+        if (isCheckinNotStarted(member)) {
+          return `
+            <button class="btn btn-secondary btn-sm" disabled>
+              尚未開始
+            </button>
+          `;
+        }
+
+        return `
+          <button
+            class="btn btn-success btn-sm"
+            onclick="checkinMember('${member.uuid}', this)"
+          >
+            報到
+          </button>
+        `;
       }
 
       function getCheckinRowClass(member, firstActionableUuid) {
@@ -5946,7 +5890,7 @@ function renderPagination() {
 
         if (checkinTimeStart || checkinTimeEnd) {
           filtered = filtered.filter((member) =>
-            isCheckinTimeWithinFilter(member, checkinTimeStart, checkinTimeEnd),
+            isCheckinWindowWithinFilter(member, checkinTimeStart, checkinTimeEnd),
           );
         }
 
@@ -5956,7 +5900,10 @@ function renderPagination() {
             (member) =>
               (member.name || "").toLowerCase().includes(keyword) ||
               (member.idNumber || "").toLowerCase().includes(keyword) ||
-              (member.activityNumber || "").toLowerCase().includes(keyword),
+              (member.activityNumber || "").toLowerCase().includes(keyword) ||
+              (member.activityCode || currentActivityCode || "")
+                .toLowerCase()
+                .includes(keyword),
           );
         }
 
@@ -5967,26 +5914,51 @@ function renderPagination() {
         }
       }
 
-      function isCheckinTimeWithinFilter(member, startTime, endTime) {
-        if (!member.checkinTime) return false;
-
-        const minutes = getMinutesFromDateTime(member.checkinTime);
+      function isCheckinWindowWithinFilter(member, startTime, endTime) {
+        const windowStartMinutes = getMinutesFromTimeValue(member.checkinStartTime);
+        const windowEndMinutes = getMinutesFromTimeValue(member.checkinEndTime);
         const startMinutes = getMinutesFromTimeInput(startTime);
         const endMinutes = getMinutesFromTimeInput(endTime);
 
-        if (minutes === null) return false;
-        if (startMinutes !== null && minutes < startMinutes) return false;
-        if (endMinutes !== null && minutes > endMinutes) return false;
+        if (windowStartMinutes === null && windowEndMinutes === null) return false;
 
-        return true;
+        const memberStart = windowStartMinutes ?? windowEndMinutes;
+        const memberEnd = windowEndMinutes ?? windowStartMinutes;
+        const filterStart = startMinutes ?? 0;
+        const filterEnd = endMinutes ?? 24 * 60 - 1;
+
+        return memberStart <= filterEnd && memberEnd >= filterStart;
       }
 
-      function getMinutesFromDateTime(datetime) {
-        const date = new Date(datetime);
+      function getMinutesFromTimeValue(value) {
+        if (!value) return null;
 
-        if (Number.isNaN(date.getTime())) return null;
+        if (value instanceof Date) {
+          return value.getHours() * 60 + value.getMinutes();
+        }
 
-        return date.getHours() * 60 + date.getMinutes();
+        const parsedDate = new Date(value);
+
+        if (!Number.isNaN(parsedDate.getTime()) && /\d{4}/.test(String(value))) {
+          return parsedDate.getHours() * 60 + parsedDate.getMinutes();
+        }
+
+        const timeText = String(value).trim();
+        const isPM = timeText.includes("下午");
+        const isAM = timeText.includes("上午");
+        const clean = timeText.replace("上午", "").replace("下午", "").trim();
+        const match = clean.match(/(\d{1,2}):(\d{1,2})/);
+
+        if (!match) return null;
+
+        let hour = Number(match[1]);
+        const minute = Number(match[2]);
+
+        if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+        if (isPM && hour < 12) hour += 12;
+        if (isAM && hour === 12) hour = 0;
+
+        return hour * 60 + minute;
       }
 
       function getMinutesFromTimeInput(time) {
@@ -6499,10 +6471,6 @@ function renderPagination() {
 
               <td>
                   <div class="skeleton-box w-50"></div>
-              </td>
-
-              <td>
-                  <div class="skeleton-box w-40"></div>
               </td>
 
               <td>
