@@ -359,6 +359,10 @@
                 <button class="btn btn-primary" onclick="reloadInterviewMembers()">
                   重新整理
                 </button>
+
+                <button class="btn btn-outline-secondary" onclick="resetInterviewFilters()">
+                  清除篩選
+                </button>
               </div>
 
               <div class="interview-notice">
@@ -3014,6 +3018,16 @@
         });
 
         select.value = values.includes(current) ? current : "";
+      }
+
+      function resetInterviewFilters() {
+        document.getElementById("interviewLocationFilter").value = "";
+        document.getElementById("interviewStatusPageFilter").value = "";
+        document.getElementById("interviewTimeFilter").value = "";
+        document.getElementById("interviewSearchInput").value = "";
+        currentInterviewPage = 1;
+        selectedInterviewUuids.clear();
+        filterInterviewMembers();
       }
 
       function filterInterviewMembers() {
@@ -5710,6 +5724,30 @@ function renderPagination() {
             item.code === currentActivityCode ||
             item.activityCode === currentActivityCode,
         );
+        const isCheckinAction = actionType === "報到";
+        const isCancelCheckinAction = actionType === "取消報到";
+        const isInterviewAction = [
+          "面試叫號",
+          "取消面試叫號",
+          "面試完成",
+          "自動完成面試",
+        ].includes(actionType);
+        const isLateCallSettingAction = actionType === "設定遲到可叫號時段";
+        const checkinTime =
+          isCheckinAction && member.checkinTime
+            ? formatDateTime(member.checkinTime)
+            : "";
+        const currentCalling =
+          isInterviewAction && actionType !== "面試完成" && actionType !== "自動完成面試"
+            ? member.currentCalling
+              ? "叫號中"
+              : ""
+            : "";
+        const note = isLateCallSettingAction
+          ? member.note || ""
+          : getLateCallAvailableTime(member)
+            ? `${member.note ? `${member.note}；` : ""}可叫號時段 ${formatLateCallDisplayTime(getLateCallAvailableTime(member))}`
+            : member.note || "";
 
         return {
           紀錄時間: formatDateTime(new Date()),
@@ -5729,12 +5767,10 @@ function renderPagination() {
           活動編號: member.activityNumber || "",
           報到狀態: member.checkinStatus || "",
           面試狀態: member.interviewStatus || "",
-          目前叫號: member.currentCalling ? "叫號中" : "",
+          目前叫號: currentCalling,
           缺考: member.absent || "",
-          報到時間: member.checkinTime ? formatDateTime(member.checkinTime) : "",
-          備註: getLateCallAvailableTime(member)
-            ? `${member.note ? `${member.note}；` : ""}可叫號時段 ${formatLateCallDisplayTime(getLateCallAvailableTime(member))}`
-            : member.note || "",
+          報到時間: checkinTime,
+          備註: isCancelCheckinAction ? member.note || "" : note,
           操作人員: operator || "",
           資料來源: "web",
         };
@@ -6199,6 +6235,7 @@ function renderPagination() {
           return;
         }
 
+        resetCheckinFilters();
         document.getElementById("checkinSearch").value = member.idNumber || "";
         filterCheckinList();
         checkinMember(member.uuid);
@@ -6979,11 +7016,22 @@ function renderPagination() {
       }
 
       function getRecordStatus(item) {
+        const action = getLogValue(item, "action", "操作類型");
         const status = getLogValue(item, "checkinStatus", "報到狀態");
+        const interviewStatus = getLogValue(item, "interviewStatus", "面試狀態");
         const note = getLogValue(item, "note", "備註");
         const checkinTime = getLogValue(item, "checkinTime", "報到時間");
 
-        if (status === "遲到報到" || note.includes("遲到")) return "遲到報到";
+        if (action === "面試叫號") return "面試叫號";
+        if (action === "取消面試叫號") return "取消叫號";
+        if (action === "面試完成" || action === "自動完成面試") return "面試完成";
+        if (action === "設定遲到可叫號時段") return "時段設定";
+
+        if (status === "遲到報到" || (action === "報到" && note.includes("遲到"))) {
+          return "遲到報到";
+        }
+
+        if (interviewStatus && interviewStatus.includes("完成")) return "面試完成";
 
         if (status) return status;
 
@@ -7008,6 +7056,14 @@ function renderPagination() {
         const className =
           normalizedStatus === "缺考"
             ? "status-danger"
+            : normalizedStatus === "面試叫號"
+              ? "status-warning"
+              : normalizedStatus === "取消叫號"
+                ? "status-gray"
+                : normalizedStatus === "面試完成"
+                  ? "status-primary"
+                  : normalizedStatus === "時段設定"
+                    ? "status-info"
             : getCheckinStatusClass(normalizedStatus);
 
         return `
