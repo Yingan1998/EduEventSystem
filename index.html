@@ -392,6 +392,8 @@
                 <table class="table align-middle interview-table">
                   <thead>
                     <tr>
+                      <th>操作按鈕</th>
+
                       <th>
                         <input
                           type="checkbox"
@@ -408,7 +410,6 @@
                       <th>面試狀態</th>
                       <th>報到時間</th>
                       <th>完成時間</th>
-                      <th>操作按鈕</th>
                     </tr>
                   </thead>
 
@@ -3189,6 +3190,7 @@
       function renderInterviewMemberRow(member) {
         return `
           <tr class="${getInterviewCallStatus(member) === "叫號中" ? "interview-row-calling" : ""}">
+            <td>${renderInterviewActions(member)}</td>
             <td>
               <input
                 type="checkbox"
@@ -3208,7 +3210,6 @@
             <td>${renderInterviewBadge(getInterviewProcessStatus(member))}</td>
             <td>${escapeHtml(formatInterviewDateTime(member.checkinTime))}</td>
             <td>${escapeHtml(formatInterviewDateTime(member.finishTime))}</td>
-            <td>${renderInterviewActions(member)}</td>
           </tr>
         `;
       }

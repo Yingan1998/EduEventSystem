@@ -1313,6 +1313,17 @@ Interview
   box-shadow: inset 0 -1px 0 #e2e8f0;
 }
 
+.interview-table th:first-child,
+.interview-table td:first-child {
+  width: 220px;
+}
+
+.interview-table th:nth-child(2),
+.interview-table td:nth-child(2) {
+  width: 48px;
+  text-align: center;
+}
+
 .interview-row-calling td {
   background: #eff6ff;
 }
